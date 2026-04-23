@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { listenTodosLosPedidos, listenUsuarios, actualizarRolUsuario, asignarPedido, crearUsuarioPersonal, actualizarEstadoPedido } from '../services/pedidoService';
+import { listenTodosLosPedidos, listenUsuarios, actualizarRolUsuario, asignarPedido, crearUsuarioPersonal, actualizarEstadoPedido, deleteUsuario } from '../services/pedidoService';
 import { Pedido, Usuario, UserRole } from '../types';
-import { LayoutDashboard, Clock, CheckCircle2, Bike, Package, BarChart3, Users, TrendingUp, Shield, Store, User as UserIcon, MoreVertical, Loader2, Send, Edit2, UserPlus, Mail, Lock, Eye, EyeOff, Settings } from 'lucide-react';
+import { LayoutDashboard, Clock, CheckCircle2, Bike, Package, BarChart3, Users, TrendingUp, Shield, Store, User as UserIcon, MoreVertical, Loader2, Send, Edit2, UserPlus, Mail, Lock, Eye, EyeOff, Settings, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -26,7 +26,7 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
   const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'pedidos' | 'usuarios' | 'registro' | 'aliados' | 'mototaxi' | 'general_tarifas'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'pedidos' | 'usuarios' | 'registro' | 'aliados' | 'mototaxi' | 'general_tarifas' | 'mantenimiento'>('stats');
 
   useEffect(() => {
     if (propActiveTab) {
@@ -37,7 +37,8 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
         'registro': 'registro',
         'aliados': 'aliados',
         'mototaxi': 'mototaxi',
-        'config': 'general_tarifas'
+        'config': 'general_tarifas',
+        'mantenimiento': 'mantenimiento'
       };
       if (tabMap[propActiveTab]) {
         setActiveTab(tabMap[propActiveTab]);
@@ -164,6 +165,48 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
     }
   };
 
+  const handleEliminarPedido = async (pedidoId: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este pedido permanentemente?')) return;
+    
+    setLoadingPedido(pedidoId);
+    try {
+      await import('../services/pedidoService').then(s => s.eliminarPedido(pedidoId));
+      toast.success('Pedido eliminado correctamente');
+    } catch (e) {
+      toast.error('Error al eliminar el pedido');
+    } finally {
+      setLoadingPedido(null);
+    }
+  };
+
+
+  const handleLimpiarHistorial = async (tipo: 'orders' | 'messages' | 'notifications' | 'all') => {
+    if (!window.confirm(`¿Estás seguro de que deseas limpiar ${tipo === 'all' ? 'TODO el historial' : 'los registros de ' + tipo}? Esta acción no se puede deshacer.`)) return;
+    
+    try {
+      await import('../services/pedidoService').then(s => s.limpiarHistorial(tipo));
+      toast.success('Limpieza completada correctamente');
+    } catch (e) {
+      toast.error('Error al limpiar el historial');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este usuario? Se perderán todos sus datos.')) return;
+    
+    setLoadingUser(userId);
+    try {
+      await deleteUsuario(userId);
+      setUsuarios(prev => prev.filter(u => u.uid !== userId));
+      toast.success('Usuario eliminado correctamente');
+    } catch (e: any) {
+      const errorMsg = e.message || 'Error al eliminar el usuario';
+      toast.error(`No se pudo eliminar: ${errorMsg}`);
+    } finally {
+      setLoadingUser(null);
+    }
+  };
+
   // Helper para disponibilidad dinámica
   const isMotorizadoOcupado = (uid: string) => {
     return pedidos.some(p => p.motorizado_id === uid && (p.estado === 'asignado' || p.estado === 'en_camino'));
@@ -192,6 +235,7 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
             { id: 'mototaxi', label: 'Moto Taxi', icon: Bike },
             { id: 'general_tarifas', label: 'Tarifas Gral', icon: Settings },
             { id: 'registro', label: 'Registrar', icon: UserPlus },
+            { id: 'mantenimiento', label: 'Limpieza', icon: Shield },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -298,33 +342,34 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
                 <thead>
                   <tr className="bg-gray-50/50">
                     <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Pedido</th>
-                    <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cliente</th>
-                    <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado</th>
-                    <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Asignación</th>
+                    <th className="p-3 sm:p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest hidden md:table-cell">Cliente</th>
+                    <th className="p-3 sm:p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado</th>
+                    <th className="p-3 sm:p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Asignación</th>
+                    <th className="p-3 sm:p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Borrar</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {pedidos.map((p) => (
                     <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="p-6">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      <td className="p-3 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
                             p.tipo === 'compra' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
                           }`}>
-                            <Package size={20} />
+                            <Package size={16} className="sm:size-20" />
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-900">{p.descripcion}</p>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.id.slice(0, 8)}</p>
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm font-black text-gray-900 truncate uppercase tracking-tight max-w-[100px] sm:max-w-none">{p.descripcion}</p>
+                            <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.id.slice(0, 8)}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-6">
+                      <td className="p-3 sm:p-6 hidden md:table-cell">
                         <p className="text-sm font-bold text-gray-700">{p.cliente_nombre || 'Cliente'}</p>
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">ID: {p.cliente_id.slice(0, 6)}</p>
                       </td>
-                      <td className="p-6">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                      <td className="p-3 sm:p-6">
+                        <span className={`px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest ${
                           p.estado === 'disponible' ? 'bg-blue-100 text-blue-600' :
                           p.estado === 'asignado' ? 'bg-orange-100 text-orange-600' :
                           p.estado === 'en_camino' ? 'bg-purple-100 text-purple-600' :
@@ -333,20 +378,20 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
                           {p.estado}
                         </span>
                       </td>
-                      <td className="p-6">
+                      <td className="p-3 sm:p-6">
                         {p.estado === 'disponible' ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       <select 
-                        className="text-[10px] sm:text-xs font-bold bg-gray-50 border-none rounded-xl py-2 px-2 sm:px-3 focus:ring-2 focus:ring-orange-500 outline-none w-full max-w-[100px] sm:max-w-[150px]"
+                        className="text-[9px] sm:text-xs font-bold bg-gray-50 border-none rounded-lg sm:rounded-xl py-1.5 px-1 sm:px-3 focus:ring-2 focus:ring-orange-500 outline-none w-full max-w-[70px] sm:max-w-[150px]"
                         value={selectedDriver[p.id] || ''}
                         onChange={(e) => setSelectedDriver({ ...selectedDriver, [p.id]: e.target.value })}
                       >
-                        <option value="">Seleccionar...</option>
+                        <option value="">...</option>
                          {usuarios.filter(u => u.rol === 'motorizado').map(u => {
                            const ocupado = isMotorizadoOcupado(u.uid);
                            return (
                              <option key={u.uid} value={u.uid} disabled={ocupado}>
-                               {u.nombre} {ocupado ? '🟠 (OCUPADO)' : (u.disponible ? '🟢' : '⚪')}
+                               {u.nombre.split(' ')[0]} {ocupado ? '🟠' : (u.disponible ? '🟢' : '⚪')}
                              </option>
                            );
                          })}
@@ -354,32 +399,41 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
                       <button
                         onClick={() => handleAsignarPedido(p.id)}
                         disabled={!selectedDriver[p.id] || loadingPedido === p.id}
-                        className="p-2 sm:p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-orange-200"
+                        className="p-1.5 sm:p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg sm:rounded-xl transition-all disabled:opacity-50"
                       >
-                        {loadingPedido === p.id ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                        {loadingPedido === p.id ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
                       </button>
                     </div>
                         ) : (
-                           <div className="flex items-center justify-between gap-4">
-                             <div className="flex items-center gap-2">
-                               <div className="w-6 h-6 rounded-full bg-gray-100 overflow-hidden">
+                           <div className="flex items-center justify-between gap-1 sm:gap-4">
+                             <div className="flex items-center gap-1 sm:gap-2">
+                               <div className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gray-100 overflow-hidden hidden sm:block">
                                  <img src={`https://picsum.photos/seed/${p.motorizado_id}/50/50`} alt="Motorizado" />
                                </div>
-                               <p className="text-xs font-bold text-gray-600">{p.motorizado_nombre}</p>
+                               <p className="text-[9px] sm:text-xs font-bold text-gray-600 truncate max-w-[40px] sm:max-w-none">{p.motorizado_nombre.split(' ')[0]}</p>
                              </div>
                              {p.estado !== 'entregado' && (
                                <button 
                                  onClick={() => handleActualizarEstadoPedido(p.id, 'entregado')}
-                                 className="text-[9px] font-black text-orange-500 hover:text-orange-600 uppercase tracking-widest bg-orange-50 px-3 py-1.5 rounded-xl transition-all hover:scale-105 active:scale-95"
-                                 title="Forzar finalización de pedido y liberar repartidor"
+                                 className="text-[7px] sm:text-[9px] font-black text-orange-500 hover:text-orange-600 uppercase tracking-widest bg-orange-50 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-xl transition-all"
+                                 title="Forzar"
                                >
-                                 Finalizar
+                                 OK
                                </button>
                              )}
-                           </div>
-                        )}
-                      </td>
-                    </tr>
+                            </div>
+                         )}
+                       </td>
+                       <td className="p-2 sm:p-6 text-center border-l border-gray-50 bg-gray-50/10">
+                         <button 
+                           onClick={() => handleEliminarPedido(p.id)}
+                           className="p-2 sm:p-3 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg sm:rounded-xl transition-all"
+                           title="Eliminar permanentemente"
+                         >
+                           {loadingPedido === p.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                         </button>
+                       </td>
+                     </tr>
                   ))}
                 </tbody>
               </table>
@@ -517,8 +571,17 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
                                     }}
                                     className="w-full text-left px-4 py-2 text-xs font-bold rounded-lg hover:bg-gray-50 text-gray-600 flex items-center gap-2"
                                   >
-                                    <Edit2 size={14} />
                                     Editar Usuario
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteUser(u.uid);
+                                      setSelectedUserForRole(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-xs font-bold rounded-lg hover:bg-red-50 text-red-600 flex items-center gap-2"
+                                  >
+                                    <X size={14} />
+                                    Eliminar Usuario
                                   </button>
                                 </div>
                               </div>
@@ -674,6 +737,75 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
             className="w-full"
           >
             <GeneralTarifasAdmin />
+          </motion.div>
+        )}
+        {activeTab === 'mantenimiento' && (
+          <motion.div
+            key="mantenimiento"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-4xl mx-auto space-y-6 pb-20"
+          >
+            <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center">
+                  <Shield className="text-red-600" size={28} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-gray-900">Mantenimiento de Datos</h2>
+                  <p className="text-gray-400 font-medium text-sm">Limpia el historial y mantén el sistema ágil</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col justify-between">
+                  <div>
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm">
+                      <Package className="text-gray-400" size={20} />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-1">Limpiar Pedidos</h3>
+                    <p className="text-xs text-gray-500 mb-6">Elimina todos los registros de pedidos. Ideal para iniciar un nuevo día o semana.</p>
+                  </div>
+                  <button 
+                    onClick={() => handleLimpiarHistorial('orders')}
+                    className="w-full py-4 bg-white text-gray-900 border border-gray-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-all shadow-sm"
+                  >
+                    Borrar Historial de Pedidos
+                  </button>
+                </div>
+
+                <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col justify-between">
+                  <div>
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm">
+                      <Mail className="text-gray-400" size={20} />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-1">Limpiar Mensajes</h3>
+                    <p className="text-xs text-gray-500 mb-6">Elimina todas las conversaciones y mensajes de soporte del sistema.</p>
+                  </div>
+                  <button 
+                    onClick={() => handleLimpiarHistorial('messages')}
+                    className="w-full py-4 bg-white text-gray-900 border border-gray-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-all shadow-sm"
+                  >
+                    Borrar Historial de Chat
+                  </button>
+                </div>
+
+                <div className="p-10 bg-red-50 rounded-[2.5rem] border border-red-100 flex flex-col justify-between md:col-span-2 mt-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-100 rounded-full -mr-16 -mt-16 opacity-50" />
+                  <div className="relative z-10">
+                    <h3 className="text-xl font-black text-red-900 mb-2">Reinicio Maestro</h3>
+                    <p className="text-sm text-red-600/70 mb-8 max-w-md">Elimina pedidos, mensajes y notificaciones. Los usuarios y comercios se conservan. Esta acción es irreversible.</p>
+                    <button 
+                      onClick={() => handleLimpiarHistorial('all')}
+                      className="w-full py-5 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-2xl shadow-red-200"
+                    >
+                      LIMPIAR TODO EL SISTEMA
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

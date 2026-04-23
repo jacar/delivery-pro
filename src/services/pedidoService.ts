@@ -90,6 +90,12 @@ export const actualizarEstadoPedido = async (pedidoId: string, nuevoEstado: Pedi
   });
 };
 
+export const eliminarPedido = async (pedidoId: string) => {
+  return await apiFetch(`/orders/${pedidoId}`, {
+    method: 'DELETE'
+  });
+};
+
 export const actualizarDisponibilidadMotorizado = async (uid: string, disponible: boolean) => {
   return await apiFetch(`/users/${uid}`, {
     method: 'PUT',
@@ -191,7 +197,7 @@ export const listenUsuarios = (callback: (usuarios: Usuario[]) => void) => {
     } catch (e) { console.error(e); }
   };
   fetchLocal();
-  const interval = setInterval(fetchLocal, 30000);
+  const interval = setInterval(fetchLocal, 5000); // 5 seconds instead of 30s
   return () => clearInterval(interval);
 };
 
@@ -301,4 +307,10 @@ export const guardarTarifaGeneral = async (tipo: 'compra' | 'recoleccion', preci
       activo: true
     });
   }
+};
+export const limpiarHistorial = async (type: 'orders' | 'messages' | 'notifications' | 'all' = 'all') => {
+  return await apiFetch('/admin/clear-history', {
+    method: 'POST',
+    body: { type }
+  });
 };

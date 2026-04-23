@@ -46,7 +46,21 @@ export default function UserModal({ isOpen, onClose, user }: UserModalProps) {
   };
 
   const handleResetPassword = async () => {
-    toast.info('La recuperación de contraseña ahora se gestiona directamente desde el servidor local.');
+    const newPass = window.prompt("Ingresa la nueva contraseña para este usuario:");
+    if (!newPass || newPass.length < 6) {
+      if (newPass) toast.error("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      await import('../services/pedidoService').then(s => s.actualizarDatosUsuario(user!.uid, { password: newPass } as any));
+      toast.success('Contraseña actualizada correctamente');
+    } catch (error) {
+      toast.error('Error al actualizar la contraseña');
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   return (
