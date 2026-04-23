@@ -97,7 +97,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread, unreadS
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg flex items-center justify-center z-40 hover:bg-orange-600 transition-colors"
+        className="fixed bottom-[100px] md:bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg flex items-center justify-center z-40 hover:bg-orange-600 transition-colors"
       >
         <MessageCircle size={24} />
         {hasUnread && !isOpen && (
@@ -114,7 +114,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread, unreadS
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 w-80 sm:w-96 h-[500px] max-h-[calc(100vh-120px)] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden border border-gray-100"
+            className="fixed bottom-[170px] md:bottom-24 right-6 w-[calc(100vw-3rem)] sm:w-96 h-[500px] max-h-[calc(100vh-200px)] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden border border-gray-100"
           >
             {/* Header */}
             <div className="bg-orange-500 text-white p-4 flex items-center justify-between shadow-md z-10">
