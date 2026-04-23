@@ -1,5 +1,4 @@
-import React from 'react';
-import { LayoutDashboard, Package, User, Bell, Settings } from 'lucide-react';
+import { LayoutDashboard, Package, User, Bell, Settings, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface MobileNavProps {
@@ -10,6 +9,7 @@ interface MobileNavProps {
 export default function MobileNav({ rol, onNavigate }: MobileNavProps) {
   const navItems = [
     ...(rol === 'cliente' ? [{ id: 'home', icon: LayoutDashboard, label: 'Inicio' }] : []),
+    { id: 'chat', icon: MessageCircle, label: 'Chat' },
     { id: 'pedidos', icon: Package, label: rol === 'admin' ? 'Gestión' : (rol === 'motorizado' ? 'Pool' : 'Mis Pedidos') },
     ...(rol === 'admin' ? [{ id: 'usuarios', icon: User, label: 'Usuarios' }] : []),
     { id: 'notificaciones', icon: Bell, label: 'Alertas' },

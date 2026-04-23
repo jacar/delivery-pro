@@ -11,10 +11,17 @@ interface ChatWidgetProps {
   currentUser: Usuario;
   hasUnread?: boolean;
   unreadSourceIds?: string[];
+  isOpen: boolean;
+  onToggle: (open: boolean) => void;
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread, unreadSourceIds = [] }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ChatWidget: React.FC<ChatWidgetProps> = ({ 
+  currentUser, 
+  hasUnread, 
+  unreadSourceIds = [],
+  isOpen,
+  onToggle
+}) => {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [conductores, setConductores] = useState<Usuario[]>([]);
@@ -92,12 +99,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread, unreadS
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button (Only desktop) */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-[130px] md:bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg flex items-center justify-center z-[60] hover:bg-orange-600 transition-colors"
+        onClick={() => onToggle(true)}
+        className="hidden md:flex fixed bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg items-center justify-center z-[60] hover:bg-orange-600 transition-colors"
       >
         <MessageCircle size={24} />
         {hasUnread && !isOpen && (
@@ -114,7 +121,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread, unreadS
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-[200px] md:bottom-24 right-6 w-[calc(100vw-3rem)] sm:w-96 h-[500px] max-h-[calc(100vh-250px)] bg-white rounded-2xl shadow-2xl flex flex-col z-[70] overflow-hidden border border-gray-100"
+            className="fixed bottom-[130px] md:bottom-24 right-6 w-[calc(100vw-3rem)] sm:w-96 h-[500px] max-h-[calc(100vh-250px)] bg-white rounded-2xl shadow-2xl flex flex-col z-[70] overflow-hidden border border-gray-100"
           >
             {/* Header */}
             <div className="bg-orange-500 text-white p-4 flex items-center justify-between shadow-md z-10">
@@ -136,7 +143,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread, unreadS
                   </p>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="hover:bg-orange-600 p-2 rounded-full transition-colors">
+              <button onClick={() => onToggle(false)} className="hover:bg-orange-600 p-2 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>

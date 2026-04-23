@@ -38,6 +38,7 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [showLegal, setShowLegal] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [legalTab, setLegalTab] = useState<'about' | 'terms' | 'privacy' | 'returns'>('about');
   const [hasUnread, setHasUnread] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
@@ -289,6 +290,7 @@ export default function App() {
       <MobileNav rol={userData?.rol || 'cliente'} onNavigate={(tab) => {
         if (tab === 'notificaciones') setShowNotifications(true);
         else if (tab === 'perfil') setShowProfile(true);
+        else if (tab === 'chat') setShowChat(true);
         else setActiveMobileTab(tab);
       }} />
 
@@ -338,6 +340,8 @@ export default function App() {
           currentUser={userData} 
           hasUnread={hasUnreadMessages} 
           unreadSourceIds={unreadMsgSourceIds}
+          isOpen={showChat}
+          onToggle={setShowChat}
         />
       )}
     </div>
