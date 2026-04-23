@@ -16,6 +16,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser }) => {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [conductores, setConductores] = useState<Usuario[]>([]);
+  const [clientes, setClientes] = useState<Usuario[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [selectedChatName, setSelectedChatName] = useState<string>('');
@@ -31,6 +32,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser }) => {
       if (isAdmin) {
         const unsubscribe = listenUsuarios((usuarios) => {
           setConductores(usuarios.filter(u => u.rol === 'motorizado'));
+          setClientes(usuarios.filter(u => u.rol === 'cliente'));
         });
         return () => unsubscribe();
       } else if (isMotorizado) {
@@ -132,39 +134,64 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser }) => {
             <div className="flex-1 bg-gray-50 overflow-y-auto flex flex-col">
               {!selectedChatId ? (
                 <div className="p-2">
-                  {isAdmin && conductores.map(conductor => (
-                    <button
-                      key={conductor.uid}
-                      onClick={() => {
-                        setSelectedChatId(conductor.uid);
-                        setSelectedChatName(conductor.nombre);
-                      }}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors border border-transparent hover:border-gray-100"
-                    >
-                      <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">
-                        {conductor.nombre.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="text-left flex-1">
-                        <p className="font-bold text-gray-900 text-sm">{conductor.nombre}</p>
-                        <p className="text-xs text-gray-500">{conductor.placaVehiculo || 'Sin placa'}</p>
-                      </div>
-                    </button>
-                  ))}
+                  {isAdmin && (
+                    <>
+                      <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Repartidores</div>
+                      {conductores.map(conductor => (
+                        <button
+                          key={conductor.uid}
+                          onClick={() => {
+                            setSelectedChatId(conductor.uid);
+                            setSelectedChatName(`Rep: ${conductor.nombre}`);
+                          }}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors border border-transparent hover:border-gray-100 mb-1"
+                        >
+                          <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">
+                            {conductor.nombre.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="text-left flex-1">
+                            <p className="font-bold text-gray-900 text-sm">{conductor.nombre}</p>
+                            <p className="text-xs text-gray-500">{conductor.placaVehiculo || 'Repartidor'}</p>
+                          </div>
+                        </button>
+                      ))}
+
+                      <div className="px-3 py-2 mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Clientes</div>
+                      {clientes.map(cliente => (
+                        <button
+                          key={cliente.uid}
+                          onClick={() => {
+                            setSelectedChatId(cliente.uid);
+                            setSelectedChatName(`Cli: ${cliente.nombre}`);
+                          }}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors border border-transparent hover:border-gray-100 mb-1"
+                        >
+                          <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                            {cliente.nombre.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="text-left flex-1">
+                            <p className="font-bold text-gray-900 text-sm">{cliente.nombre}</p>
+                            <p className="text-xs text-gray-500">{cliente.email || 'Cliente'}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  )}
                   
-                  {isMotorizado && (
+                  {(isMotorizado || isCliente) && (
                     <button
                       onClick={() => {
-                        setSelectedChatId(currentUser.uid); // Usar el propio UID para chat individual con Admin
+                        setSelectedChatId(currentUser.uid); // Usar propio UID para canal de soporte con Admin
                         setSelectedChatName('Soporte Admin');
                       }}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors border border-transparent hover:border-gray-100"
+                      className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors border border-transparent hover:border-gray-100 mb-2 shadow-sm bg-orange-50/50"
                     >
-                      <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">
                         <ShieldCheck size={20} />
                       </div>
                       <div className="text-left flex-1">
                         <p className="font-bold text-gray-900 text-sm">Soporte Admin</p>
-                        <p className="text-xs text-gray-500">Chat con administración</p>
+                        <p className="text-xs text-gray-500">Ayuda y soporte técnico</p>
                       </div>
                     </button>
                   )}
