@@ -9,9 +9,10 @@ import { es } from 'date-fns/locale';
 
 interface ChatWidgetProps {
   currentUser: Usuario;
+  hasUnread?: boolean;
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser }) => {
+const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
@@ -94,6 +95,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser }) => {
         className="fixed bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg flex items-center justify-center z-40 hover:bg-orange-600 transition-colors"
       >
         <MessageCircle size={24} />
+        {hasUnread && !isOpen && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full border-2 border-white flex items-center justify-center animate-bounce shadow-md">
+            <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+          </span>
+        )}
       </motion.button>
 
       {/* Chat Window */}

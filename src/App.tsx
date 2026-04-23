@@ -40,6 +40,7 @@ export default function App() {
   const [showLegal, setShowLegal] = useState(false);
   const [legalTab, setLegalTab] = useState<'about' | 'terms' | 'privacy' | 'returns'>('about');
   const [hasUnread, setHasUnread] = useState(false);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const lastNotifIds = useRef<string[]>([]);
 
   const openLegal = (tab: 'about' | 'terms' | 'privacy' | 'returns') => {
@@ -62,6 +63,7 @@ export default function App() {
         const notifs = await getNotifications(userData.uid);
         const unread = notifs.filter(n => !n.leido);
         setHasUnread(unread.length > 0);
+        setHasUnreadMessages(unread.some(n => n.tipo === 'mensaje'));
 
         // Detectar si hay notificaciones realmente nuevas (IDs que no estaban antes)
         const currentIds = unread.map(n => n.id.toString());
@@ -321,9 +323,7 @@ export default function App() {
           userId={userData.uid}
         />
       )}
-      {userData && (
-        <ChatWidget currentUser={userData} />
-      )}
+      {userData && <ChatWidget currentUser={userData} hasUnread={hasUnreadMessages} />}
     </div>
   );
 }

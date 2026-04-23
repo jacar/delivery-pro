@@ -21,10 +21,10 @@ import L from 'leaflet';
 // Fix for default marker icons in Leaflet
 import 'leaflet/dist/leaflet.css';
 const DefaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconUrl: `${import.meta.env.BASE_URL}icono_mapa.svg`,
+  iconSize: [35, 35],
+  iconAnchor: [17, 35],
+  popupAnchor: [0, -35]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
