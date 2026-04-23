@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageCircle, X, Send, User, ChevronLeft, ShieldCheck } from 'lucide-react';
+import { MessageCircle, X, Send, User, ChevronLeft, ShieldCheck, Search, Package } from 'lucide-react';
 import { Usuario, Mensaje, Pedido } from '../types';
 import { listenMensajes, enviarMensaje, listenUsuarios, listenMisPedidosCliente, listenMisPedidosMotorizado } from '../services/pedidoService';
-import { playNotificationSound } from '../services/soundService';
+import { playChatSound } from '../services/soundService';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface ChatWidgetProps {
   currentUser: Usuario;
   hasUnread?: boolean;
+  unreadSourceIds?: string[];
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
+const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread, unreadSourceIds = [] }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
@@ -20,6 +21,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
   const [clientes, setClientes] = useState<Usuario[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedChatName, setSelectedChatName] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMsgIdsRef = useRef<string[]>([]);
@@ -31,11 +33,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
   useEffect(() => {
     if (isOpen) {
       if (isAdmin) {
-        const unsubscribe = listenUsuarios((usuarios) => {
+        const unsubUsers = listenUsuarios((usuarios) => {
           setConductores(usuarios.filter(u => u.rol === 'motorizado'));
           setClientes(usuarios.filter(u => u.rol === 'cliente'));
         });
-        return () => unsubscribe();
+        const unsubPedidos = listenMisPedidosMotorizado('all', (allPedidos) => {
+           setPedidos(allPedidos.filter(p => p.estado !== 'entregado' && p.estado !== 'cancelado'));
+        });
+        return () => { unsubUsers(); unsubPedidos(); };
       } else if (isMotorizado) {
         const unsubscribe = listenMisPedidosMotorizado(currentUser.uid, (allPedidos) => {
           setPedidos(allPedidos.filter(p => p.estado === 'asignado' || p.estado === 'en_camino'));
@@ -63,7 +68,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
             return rid !== currentUser.uid;
           });
           if (hasIncoming) {
-            playNotificationSound();
+            playChatSound();
           }
         }
         
@@ -141,9 +146,54 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
               {!selectedChatId ? (
                 <div className="p-2">
                   {isAdmin && (
+                    <div className="px-2 pb-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input
+                          type="text"
+                          placeholder="Buscar usuario o pedido..."
+                          className="w-full pl-9 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-xs outline-none focus:border-orange-500 transition-colors"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {isAdmin && (
                     <>
+                      {/* Pedidos Activos */}
+                      {pedidos.length > 0 && (
+                        <>
+                          <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pedidos en Curso</div>
+                          {pedidos.filter(p => p.id.toLowerCase().includes(searchTerm.toLowerCase())).map(pedido => (
+                            <button
+                              key={pedido.id}
+                              onClick={() => {
+                                setSelectedChatId(pedido.id);
+                                setSelectedChatName(`Pedido #${pedido.id.substring(0, 6)}`);
+                              }}
+                              className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors border border-transparent hover:border-gray-100 mb-1"
+                            >
+                              <div className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">
+                                <Package size={20} />
+                              </div>
+                              <div className="text-left flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-bold text-gray-900 text-sm">Pedido #{pedido.id.substring(0, 6)}</p>
+                                  {unreadSourceIds.some(id => pedido.id.includes(id)) && (
+                                    <span className="px-1.5 py-0.5 bg-red-500 text-[8px] text-white font-black uppercase rounded-full animate-pulse">Nuevo</span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-500">{pedido.cliente_nombre} • {pedido.estado}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      )}
+
                       <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Repartidores</div>
-                      {conductores.map(conductor => (
+                      {conductores.filter(c => c.nombre.toLowerCase().includes(searchTerm.toLowerCase())).map(conductor => (
                         <button
                           key={conductor.uid}
                           onClick={() => {
@@ -156,14 +206,19 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
                             {conductor.nombre.charAt(0).toUpperCase()}
                           </div>
                           <div className="text-left flex-1">
-                            <p className="font-bold text-gray-900 text-sm">{conductor.nombre}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-gray-900 text-sm">{conductor.nombre}</p>
+                              {unreadSourceIds.some(id => conductor.nombre.includes(id) || conductor.uid.includes(id)) && (
+                                <span className="px-1.5 py-0.5 bg-red-500 text-[8px] text-white font-black uppercase rounded-full animate-pulse">Nuevo</span>
+                              )}
+                            </div>
                             <p className="text-xs text-gray-500">{conductor.placaVehiculo || 'Repartidor'}</p>
                           </div>
                         </button>
                       ))}
 
                       <div className="px-3 py-2 mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Clientes</div>
-                      {clientes.map(cliente => (
+                      {clientes.filter(c => c.nombre.toLowerCase().includes(searchTerm.toLowerCase())).map(cliente => (
                         <button
                           key={cliente.uid}
                           onClick={() => {
@@ -176,7 +231,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
                             {cliente.nombre.charAt(0).toUpperCase()}
                           </div>
                           <div className="text-left flex-1">
-                            <p className="font-bold text-gray-900 text-sm">{cliente.nombre}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-gray-900 text-sm">{cliente.nombre}</p>
+                              {unreadSourceIds.some(id => cliente.nombre.includes(id) || cliente.uid.includes(id)) && (
+                                <span className="px-1.5 py-0.5 bg-red-500 text-[8px] text-white font-black uppercase rounded-full animate-pulse">Nuevo</span>
+                              )}
+                            </div>
                             <p className="text-xs text-gray-500">{cliente.email || 'Cliente'}</p>
                           </div>
                         </button>
@@ -196,7 +256,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
                         <ShieldCheck size={20} />
                       </div>
                       <div className="text-left flex-1">
-                        <p className="font-bold text-gray-900 text-sm">Soporte Admin</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900 text-sm">Soporte Admin</p>
+                          {hasUnread && (
+                            <span className="px-1.5 py-0.5 bg-red-500 text-[8px] text-white font-black uppercase rounded-full animate-pulse">Nuevo</span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-500">Ayuda y soporte técnico</p>
                       </div>
                     </button>
@@ -215,9 +280,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUser, hasUnread }) => {
                         P
                       </div>
                       <div className="text-left flex-1">
-                        <p className="font-bold text-gray-900 text-sm">
-                          {isCliente ? `Repartidor: ${pedido.motorizado_nombre || 'Asignado'}` : `Cliente: ${pedido.cliente_nombre}`}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900 text-sm">
+                            {isCliente ? `Rep: ${pedido.motorizado_nombre || 'Asignado'}` : `Cli: ${pedido.cliente_nombre}`}
+                          </p>
+                          {unreadSourceIds.some(id => pedido.id.includes(id)) && (
+                            <span className="px-1.5 py-0.5 bg-red-500 text-[8px] text-white font-black uppercase rounded-full animate-pulse">Nuevo</span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-500">Pedido #{pedido.id.slice(-6)}</p>
                       </div>
                     </button>

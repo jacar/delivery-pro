@@ -14,3 +14,17 @@ export const playNotificationSound = () => {
     console.error("Failed to initialize audio:", err);
   }
 };
+export const playChatSound = () => {
+  try {
+    const audio = new Audio(`${import.meta.env.BASE_URL}chat.mp3`);
+    audio.play().catch(error => {
+      if (error.name === 'NotAllowedError') {
+        console.warn("Chat audio playback was blocked. Please interact with the page.");
+      } else {
+        console.error("Error playing chat sound:", error);
+      }
+    });
+  } catch (err) {
+    console.error("Failed to initialize chat audio:", err);
+  }
+};

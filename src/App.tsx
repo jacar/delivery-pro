@@ -41,6 +41,7 @@ export default function App() {
   const [legalTab, setLegalTab] = useState<'about' | 'terms' | 'privacy' | 'returns'>('about');
   const [hasUnread, setHasUnread] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const [unreadMsgSourceIds, setUnreadMsgSourceIds] = useState<string[]>([]);
   const lastNotifIds = useRef<string[]>([]);
 
   const openLegal = (tab: 'about' | 'terms' | 'privacy' | 'returns') => {
@@ -63,7 +64,13 @@ export default function App() {
         const notifs = await getNotifications(userData.uid);
         const unread = notifs.filter(n => !n.leido);
         setHasUnread(unread.length > 0);
-        setHasUnreadMessages(unread.some(n => n.tipo === 'mensaje'));
+        
+        const unreadMsgs = unread.filter(n => n.tipo === 'mensaje');
+        setHasUnreadMessages(unreadMsgs.length > 0);
+        
+        // Extraer IDs de remitentes de los mensajes no leídos (asumiendo que están en el título o mensaje)
+        // O mejor, el backend podría enviar el source_id. Por ahora, trataremos de inferirlo o simplemente marcar que hay mensajes.
+        setUnreadMsgSourceIds(unreadMsgs.map(n => n.titulo.split(':').pop()?.trim() || ''));
 
         // Detectar si hay notificaciones realmente nuevas (IDs que no estaban antes)
         const currentIds = unread.map(n => n.id.toString());
@@ -73,7 +80,10 @@ export default function App() {
           // Play sound and show toast for new notifications
           playNotificationSound();
           newNotifs.forEach(n => {
-            toast.info(n.titulo, { description: n.mensaje });
+            toast.info(n.titulo || "Nueva notificación", { 
+              description: n.mensaje || "Tienes un nuevo mensaje de soporte",
+              duration: 5000 
+            });
           });
         }
 
@@ -323,7 +333,13 @@ export default function App() {
           userId={userData.uid}
         />
       )}
-      {userData && <ChatWidget currentUser={userData} hasUnread={hasUnreadMessages} />}
+      {userData && (
+        <ChatWidget 
+          currentUser={userData} 
+          hasUnread={hasUnreadMessages} 
+          unreadSourceIds={unreadMsgSourceIds}
+        />
+      )}
     </div>
   );
 }
