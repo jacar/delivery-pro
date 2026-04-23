@@ -243,7 +243,7 @@ export default function App() {
       </nav>
 
       {/* Main Content with Transitions */}
-      <main className={`py-6 px-4 lg:px-6 pb-24 flex-1 w-full ${
+      <main className={`py-6 px-4 lg:px-6 pb-24 flex-1 w-full overflow-x-hidden ${
         userData?.rol === 'cliente' ? 'max-w-4xl mx-auto' : 'max-w-screen-2xl mx-auto'
       }`}>
         <Suspense fallback={<LoadingSpinner />}>

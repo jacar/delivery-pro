@@ -226,28 +226,28 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
         </div>
         
         {/* Tabs Navigation */}
-        <div className="flex items-center gap-2 p-1.5 bg-gray-100 rounded-[2rem] w-fit">
+        <div className="flex flex-wrap items-center gap-2 p-2 bg-gray-100/50 rounded-[2rem] w-full md:w-fit">
           {[
             { id: 'stats', label: 'Estadísticas', icon: BarChart3 },
             { id: 'pedidos', label: 'Pedidos', icon: Package },
             { id: 'usuarios', label: 'Usuarios', icon: Users },
             { id: 'aliados', label: 'Comercios', icon: Store },
             { id: 'mototaxi', label: 'Moto Taxi', icon: Bike },
-            { id: 'general_tarifas', label: 'Tarifas Gral', icon: Settings },
+            { id: 'general_tarifas', label: 'Tarifas', icon: Settings },
             { id: 'registro', label: 'Registrar', icon: UserPlus },
             { id: 'mantenimiento', label: 'Limpieza', icon: Shield },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-xs font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-[1.5rem] text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex-1 md:flex-none justify-center md:justify-start ${
                 activeTab === tab.id 
-                  ? 'bg-white text-gray-900 shadow-xl shadow-gray-200/50' 
-                  : 'text-gray-400 hover:text-gray-600'
+                  ? 'bg-white text-gray-900 shadow-lg shadow-gray-200/50' 
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'
               }`}
             >
-              <tab.icon size={16} />
-              <span className="hidden sm:inline">{tab.label}</span>
+              <tab.icon size={14} className="shrink-0" />
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
@@ -337,39 +337,40 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
                 <span className="text-xs font-bold text-gray-500">En tiempo real</span>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            {/* Escritorio: Tabla */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50/50">
                     <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Pedido</th>
-                    <th className="p-3 sm:p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest hidden md:table-cell">Cliente</th>
-                    <th className="p-3 sm:p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado</th>
-                    <th className="p-3 sm:p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Asignación</th>
-                    <th className="p-3 sm:p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Borrar</th>
+                    <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cliente</th>
+                    <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado</th>
+                    <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Asignación</th>
+                    <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {pedidos.map((p) => (
                     <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="p-3 sm:p-6">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+                      <td className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
                             p.tipo === 'compra' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
                           }`}>
-                            <Package size={16} className="sm:size-20" />
+                            <Package size={20} />
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-xs sm:text-sm font-black text-gray-900 truncate uppercase tracking-tight max-w-[100px] sm:max-w-none">{p.descripcion}</p>
-                            <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.id.slice(0, 8)}</p>
+                          <div>
+                            <p className="text-sm font-black text-gray-900 uppercase tracking-tight">{p.descripcion}</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.id.slice(0, 8)}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 sm:p-6 hidden md:table-cell">
+                      <td className="p-6">
                         <p className="text-sm font-bold text-gray-700">{p.cliente_nombre || 'Cliente'}</p>
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">ID: {p.cliente_id.slice(0, 6)}</p>
                       </td>
-                      <td className="p-3 sm:p-6">
-                        <span className={`px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest ${
+                      <td className="p-6">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                           p.estado === 'disponible' ? 'bg-blue-100 text-blue-600' :
                           p.estado === 'asignado' ? 'bg-orange-100 text-orange-600' :
                           p.estado === 'en_camino' ? 'bg-purple-100 text-purple-600' :
@@ -378,65 +379,128 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
                           {p.estado}
                         </span>
                       </td>
-                      <td className="p-3 sm:p-6">
+                      <td className="p-6">
                         {p.estado === 'disponible' ? (
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <select 
-                        className="text-[9px] sm:text-xs font-bold bg-gray-50 border-none rounded-lg sm:rounded-xl py-1.5 px-1 sm:px-3 focus:ring-2 focus:ring-orange-500 outline-none w-full max-w-[70px] sm:max-w-[150px]"
-                        value={selectedDriver[p.id] || ''}
-                        onChange={(e) => setSelectedDriver({ ...selectedDriver, [p.id]: e.target.value })}
-                      >
-                        <option value="">...</option>
-                         {usuarios.filter(u => u.rol === 'motorizado').map(u => {
-                           const ocupado = isMotorizadoOcupado(u.uid);
-                           return (
-                             <option key={u.uid} value={u.uid} disabled={ocupado}>
-                               {u.nombre.split(' ')[0]} {ocupado ? '🟠' : (u.disponible ? '🟢' : '⚪')}
-                             </option>
-                           );
-                         })}
-                      </select>
-                      <button
-                        onClick={() => handleAsignarPedido(p.id)}
-                        disabled={!selectedDriver[p.id] || loadingPedido === p.id}
-                        className="p-1.5 sm:p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg sm:rounded-xl transition-all disabled:opacity-50"
-                      >
-                        {loadingPedido === p.id ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                      </button>
-                    </div>
+                          <div className="flex items-center gap-2">
+                            <select 
+                              className="text-xs font-bold bg-gray-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                              value={selectedDriver[p.id] || ''}
+                              onChange={(e) => setSelectedDriver({ ...selectedDriver, [p.id]: e.target.value })}
+                            >
+                              <option value="">Seleccionar...</option>
+                              {usuarios.filter(u => u.rol === 'motorizado').map(u => (
+                                <option key={u.uid} value={u.uid} disabled={isMotorizadoOcupado(u.uid)}>
+                                  {u.nombre} {isMotorizadoOcupado(u.uid) ? '🟠' : '🟢'}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => handleAsignarPedido(p.id)}
+                              disabled={!selectedDriver[p.id] || loadingPedido === p.id}
+                              className="p-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-all disabled:opacity-50"
+                            >
+                              {loadingPedido === p.id ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                            </button>
+                          </div>
                         ) : (
-                           <div className="flex items-center justify-between gap-1 sm:gap-4">
-                             <div className="flex items-center gap-1 sm:gap-2">
-                               <div className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gray-100 overflow-hidden hidden sm:block">
-                                 <img src={`https://picsum.photos/seed/${p.motorizado_id}/50/50`} alt="Motorizado" />
-                               </div>
-                               <p className="text-[9px] sm:text-xs font-bold text-gray-600 truncate max-w-[40px] sm:max-w-none">{p.motorizado_nombre.split(' ')[0]}</p>
-                             </div>
-                             {p.estado !== 'entregado' && (
-                               <button 
-                                 onClick={() => handleActualizarEstadoPedido(p.id, 'entregado')}
-                                 className="text-[7px] sm:text-[9px] font-black text-orange-500 hover:text-orange-600 uppercase tracking-widest bg-orange-50 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-xl transition-all"
-                                 title="Forzar"
-                               >
-                                 OK
-                               </button>
-                             )}
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
+                              <img src={`https://picsum.photos/seed/${p.motorizado_id}/50/50`} alt="Motorizado" />
                             </div>
-                         )}
-                       </td>
-                       <td className="p-2 sm:p-6 text-center border-l border-gray-50 bg-gray-50/10">
-                         <button 
-                           onClick={() => handleEliminarPedido(p.id)}
-                           className="p-2 sm:p-3 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg sm:rounded-xl transition-all"
-                           title="Eliminar permanentemente"
-                         >
-                           {loadingPedido === p.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                         </button>
-                       </td>
-                     </tr>
+                            <p className="text-xs font-bold text-gray-600">{p.motorizado_nombre.split(' ')[0]}</p>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-6 text-center">
+                        <button 
+                          onClick={() => handleEliminarPedido(p.id)}
+                          className="p-3 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-xl transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Móvil: Tarjetas */}
+            <div className="md:hidden divide-y divide-gray-50">
+              {pedidos.map((p) => (
+                <div key={p.id} className="p-5 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
+                        p.tipo === 'compra' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                      }`}>
+                        <Package size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-gray-900 uppercase tracking-tight">{p.descripcion}</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.id.slice(0, 8)}</p>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                      p.estado === 'disponible' ? 'bg-blue-100 text-blue-600' :
+                      p.estado === 'asignado' ? 'bg-orange-100 text-orange-600' :
+                      'bg-green-100 text-green-600'
+                    }`}>
+                      {p.estado}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50/50 p-3 rounded-2xl">
+                    <div className="space-y-1">
+                      <p className="opacity-50">Cliente</p>
+                      <p className="text-gray-700">{p.cliente_nombre || 'Cliente'}</p>
+                    </div>
+                    <div className="space-y-1 text-right">
+                      <p className="opacity-50">Motorizado</p>
+                      <p className="text-gray-700">{p.motorizado_nombre ? p.motorizado_nombre.split(' ')[0] : 'Pendiente'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {p.estado === 'disponible' ? (
+                      <>
+                        <select 
+                          className="flex-1 text-xs font-bold bg-white border border-gray-100 rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-500 outline-none shadow-sm"
+                          value={selectedDriver[p.id] || ''}
+                          onChange={(e) => setSelectedDriver({ ...selectedDriver, [p.id]: e.target.value })}
+                        >
+                          <option value="">Asignar...</option>
+                          {usuarios.filter(u => u.rol === 'motorizado').map(u => (
+                            <option key={u.uid} value={u.uid} disabled={isMotorizadoOcupado(u.uid)}>
+                              {u.nombre}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => handleAsignarPedido(p.id)}
+                          disabled={!selectedDriver[p.id] || loadingPedido === p.id}
+                          className="p-3 bg-orange-500 text-white rounded-xl shadow-lg shadow-orange-100 disabled:opacity-50"
+                        >
+                          <Send size={18} />
+                        </button>
+                      </>
+                    ) : (
+                      <button 
+                        onClick={() => handleActualizarEstadoPedido(p.id, 'entregado')}
+                        className="flex-1 py-3 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-green-100"
+                      >
+                        Forzar Entrega
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleEliminarPedido(p.id)}
+                      className="p-3 bg-red-50 text-red-500 rounded-xl border border-red-100"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </motion.div>
         )}
@@ -462,7 +526,7 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50/50">
@@ -593,6 +657,102 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Vista Móvil */}
+            <div className="md:hidden divide-y divide-gray-100 bg-gray-50/50">
+              {usuarios.map((u) => (
+                <div key={u.uid} className="p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white overflow-hidden border-2 border-white shadow-sm shrink-0">
+                        <img 
+                          src={u.fotoUrl || `https://picsum.photos/seed/${u.uid}/100/100`} 
+                          alt="User" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">{u.nombre}</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">ID: {u.uid.slice(0, 8)}</p>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+                      u.rol === 'admin' ? 'bg-purple-100 text-purple-600' :
+                      u.rol === 'motorizado' ? 'bg-blue-100 text-blue-600' :
+                      'bg-orange-100 text-orange-600'
+                    }`}>
+                      {u.rol}
+                    </span>
+                  </div>
+
+                  {u.rol === 'motorizado' && (
+                    <div className="bg-white p-3 rounded-2xl border border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${isMotorizadoOcupado(u.uid) ? 'bg-orange-500' : (u.disponible ? 'bg-green-500 animate-pulse' : 'bg-gray-300')}`} />
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-tight">
+                          {isMotorizadoOcupado(u.uid) ? 'Ocupado' : (u.disponible ? 'Online' : 'Offline')}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">{u.tipoVehiculo || 'S/V'}</span>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    {u.rol === 'motorizado' && (
+                      <button 
+                        onClick={() => { setEditingDriver(u); setIsDriverModalOpen(true); }}
+                        className="flex-1 py-3 bg-white border border-gray-100 text-orange-500 rounded-xl flex items-center justify-center gap-2 shadow-sm"
+                      >
+                        <Edit2 size={14} />
+                        <span className="text-[10px] font-black uppercase">Perfil</span>
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => setSelectedUserForRole(selectedUserForRole === u.uid ? null : u.uid)}
+                      className="flex-1 py-3 bg-gray-900 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-gray-200"
+                    >
+                      <MoreVertical size={14} />
+                      <span className="text-[10px] font-black uppercase">Acciones</span>
+                    </button>
+                  </div>
+
+                  {selectedUserForRole === u.uid && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="bg-white rounded-2xl border border-gray-100 p-2 space-y-1 shadow-inner"
+                    >
+                      <p className="px-3 py-2 text-[9px] font-black text-gray-400 uppercase border-b border-gray-50">Gestionar Usuario</p>
+                      <div className="grid grid-cols-3 gap-1">
+                        {(['cliente', 'motorizado', 'admin'] as UserRole[]).map(role => (
+                          <button
+                            key={role}
+                            onClick={() => handleRoleChange(u.uid, role)}
+                            className={`py-2 text-[9px] font-black rounded-lg uppercase ${u.rol === role ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}
+                          >
+                            {role}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-1 pt-1">
+                        <button
+                          onClick={() => { setEditingUser(u); setIsUserModalOpen(true); setSelectedUserForRole(null); }}
+                          className="flex-1 py-2.5 bg-gray-50 text-gray-600 text-[9px] font-black rounded-lg uppercase"
+                        >
+                          Editar Datos
+                        </button>
+                        <button
+                          onClick={() => { handleDeleteUser(u.uid); setSelectedUserForRole(null); }}
+                          className="flex-1 py-2.5 bg-red-50 text-red-600 text-[9px] font-black rounded-lg uppercase"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              ))}
             </div>
           </motion.div>
         )}
