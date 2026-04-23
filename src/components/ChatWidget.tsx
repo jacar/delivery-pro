@@ -106,7 +106,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         onClick={() => onToggle(true)}
         className="hidden md:flex fixed bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg items-center justify-center z-[60] hover:bg-orange-600 transition-colors"
       >
-        <MessageCircle size={24} />
+        <img src="/burbuja-de-chat.png" alt="Chat" className="w-8 h-8 object-contain" />
         {hasUnread && !isOpen && (
           <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full border-2 border-white flex items-center justify-center animate-bounce shadow-md">
             <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>

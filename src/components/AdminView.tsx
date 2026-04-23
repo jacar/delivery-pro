@@ -266,7 +266,7 @@ export default function AdminView({ activeTab: propActiveTab }: AdminViewProps) 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 { label: 'Total Pedidos', value: stats.total, icon: Package, color: 'gray', trend: '+12%' },
-                { label: 'Disponibles', value: stats.disponibles, icon: Clock, color: 'blue', trend: 'Pool' },
+                { label: 'Disponibles', value: stats.disponibles, icon: Clock, color: 'blue', trend: 'Libres' },
                 { label: 'En Camino', value: stats.enCamino, icon: Bike, color: 'orange', trend: 'Activos' },
                 { label: 'Entregados', value: stats.entregados, icon: CheckCircle2, color: 'green', trend: 'Hoy' }
               ].map((stat) => (

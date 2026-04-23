@@ -1,16 +1,18 @@
+import React from 'react';
 import { LayoutDashboard, Package, User, Bell, Settings, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface MobileNavProps {
   rol: string;
+  hasUnreadChat?: boolean;
   onNavigate: (tab: string) => void;
 }
 
-export default function MobileNav({ rol, onNavigate }: MobileNavProps) {
+export default function MobileNav({ rol, onNavigate, hasUnreadChat }: MobileNavProps) {
   const navItems = [
     ...(rol === 'cliente' ? [{ id: 'home', icon: LayoutDashboard, label: 'Inicio' }] : []),
     { id: 'chat', icon: MessageCircle, label: 'Chat' },
-    { id: 'pedidos', icon: Package, label: rol === 'admin' ? 'Gestión' : (rol === 'motorizado' ? 'Pool' : 'Mis Pedidos') },
+    { id: 'pedidos', icon: Package, label: rol === 'admin' ? 'Gestión' : (rol === 'motorizado' ? 'Pedidos' : 'Mis Pedidos') },
     ...(rol === 'admin' ? [{ id: 'usuarios', icon: User, label: 'Usuarios' }] : []),
     { id: 'notificaciones', icon: Bell, label: 'Alertas' },
     { id: 'perfil', icon: User, label: 'Perfil' },
@@ -28,7 +30,16 @@ export default function MobileNav({ rol, onNavigate }: MobileNavProps) {
           onClick={() => onNavigate(item.id)}
           className="p-3 rounded-2xl text-gray-500 hover:text-orange-500 transition-colors flex flex-col items-center gap-0.5"
         >
-          <item.icon size={18} />
+          <div className="relative">
+            {item.id === 'chat' ? (
+              <img src="/burbuja-de-chat.png" alt="Chat" className="w-5 h-5 object-contain" />
+            ) : (
+              <item.icon size={18} />
+            )}
+            {item.id === 'chat' && hasUnreadChat && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+            )}
+          </div>
           <span className="text-[8px] font-black uppercase tracking-tight opacity-60">{item.label}</span>
         </button>
       ))}

@@ -302,6 +302,7 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
       </div>
 
       {/* Active Map Section */}
+      {activeTab === 'misPedidos' && (
       <AnimatePresence>
         {misPedidos.some(p => p.estado !== 'entregado') && (
           <motion.div
@@ -497,8 +498,10 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
           </AnimatePresence>
         </div>
       </div>
+      )}
 
-      {/* Pool de Pedidos Disponibles */}
+      {/* Pedidos Disponibles (Pool) - Solo si está en la pestaña de Disponibles */}
+      {activeTab === 'disponibles' && (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3 uppercase tracking-tight">
@@ -585,6 +588,7 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
           </AnimatePresence>
         </div>
       </div>
+      )}
     </div>
   );
 }

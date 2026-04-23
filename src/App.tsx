@@ -39,9 +39,27 @@ export default function App() {
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [showLegal, setShowLegal] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [legalTab, setLegalTab] = useState<'about' | 'terms' | 'privacy' | 'returns'>('about');
   const [hasUnread, setHasUnread] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      
+      const hasDismissed = localStorage.getItem('installPromptDismissed');
+      if (!hasDismissed) {
+        setShowInstallPrompt(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
   const [unreadMsgSourceIds, setUnreadMsgSourceIds] = useState<string[]>([]);
   const lastNotifIds = useRef<string[]>([]);
 
@@ -256,43 +274,34 @@ export default function App() {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.3 }}
             >
-              {activeMobileTab === 'home' && <HomeInformativo onStart={() => setActiveMobileTab('pedidos')} />}
-              {activeMobileTab !== 'home' && (
-                <>
-                  {/* Seguridad: Solo admins ven la gestión total o usuarios */}
-                  {userData?.rol === 'admin' && activeMobileTab === 'usuarios' && <AdminView activeTab="usuarios" />}
-                  
-                  {/* Vista principal según rol */}
-                  {activeMobileTab === 'pedidos' && (
-                    <>
-                      {userData?.rol === 'admin' && <AdminView activeTab="pedidos" />}
-                      {userData?.rol === 'motorizado' && <RepartidorView userData={userData} activeTab="pedidos" />}
-                      {userData?.rol === 'cliente' && <ClienteView userData={userData} activeTab="pedidos" />}
-                    </>
-                  )}
-                  
-                  {/* Otros estados del móvil se manejan por defecto si no hay coincidencia */}
-                  {activeMobileTab !== 'pedidos' && activeMobileTab !== 'usuarios' && (
-                    <>
-                      {userData?.rol === 'cliente' && <ClienteView userData={userData} activeTab={activeMobileTab} />}
-                      {userData?.rol === 'motorizado' && <RepartidorView userData={userData} activeTab={activeMobileTab} />}
-                      {userData?.rol === 'admin' && <AdminView activeTab={activeMobileTab} />}
-                    </>
-                  )}
-                </>
-              )}
+              {(() => {
+                if (activeMobileTab === 'home') return <HomeInformativo onStart={() => setActiveMobileTab('pedidos')} />;
+                
+                if (userData?.rol === 'admin') return <AdminView activeTab={activeMobileTab} />;
+                if (userData?.rol === 'motorizado') return <RepartidorView userData={userData} activeTab={activeMobileTab} />;
+                if (userData?.rol === 'cliente') return <ClienteView userData={userData} activeTab={activeMobileTab} />;
+                
+                return null;
+              })()}
             </motion.div>
           </AnimatePresence>
         </Suspense>
       </main>
 
       {/* Mobile Navigation */}
-      <MobileNav rol={userData?.rol || 'cliente'} onNavigate={(tab) => {
-        if (tab === 'notificaciones') setShowNotifications(true);
-        else if (tab === 'perfil') setShowProfile(true);
-        else if (tab === 'chat') setShowChat(true);
-        else setActiveMobileTab(tab);
-      }} />
+      <MobileNav 
+        rol={userData?.rol || 'cliente'} 
+        hasUnreadChat={hasUnreadMessages}
+        onNavigate={(tab) => {
+          if (tab === 'notificaciones') setShowNotifications(true);
+          else if (tab === 'perfil') setShowProfile(true);
+          else if (tab === 'chat') setShowChat(true);
+          else {
+            setActiveMobileTab(tab);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }} 
+      />
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-100 py-12 px-6 lg:px-10 hidden md:block">
@@ -344,6 +353,51 @@ export default function App() {
           onToggle={setShowChat}
         />
       )}
+
+      {/* PWA Install Prompt */}
+      <AnimatePresence>
+        {showInstallPrompt && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-24 md:bottom-10 left-6 right-6 md:left-auto md:right-10 md:w-96 z-[100] bg-gray-900 text-white p-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center text-center gap-6 border border-white/10 backdrop-blur-xl"
+          >
+            <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center p-3 shadow-xl">
+              <img src="/icono_pwa.png" alt="App Icon" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <h4 className="text-xl font-black tracking-tight">DeliveryExpress</h4>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-2 px-4 leading-relaxed">
+                Instala la aplicación en tu escritorio para una mejor experiencia y acceso rápido.
+              </p>
+            </div>
+            <div className="flex gap-3 w-full">
+              <button 
+                onClick={() => { setShowInstallPrompt(false); localStorage.setItem('installPromptDismissed', 'true'); }}
+                className="flex-1 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+              >
+                Más tarde
+              </button>
+              <button 
+                onClick={async () => {
+                  if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                      setShowInstallPrompt(false);
+                      localStorage.setItem('installPromptDismissed', 'true');
+                    }
+                  }
+                }}
+                className="flex-1 px-8 py-4 bg-orange-500 hover:bg-orange-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
+              >
+                Instalar
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
