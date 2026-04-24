@@ -104,12 +104,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => onToggle(true)}
-        className="fixed bottom-24 md:bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg items-center justify-center z-[60] hover:bg-orange-600 transition-colors"
+        className="fixed bottom-24 md:bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-full shadow-[0_10px_30px_-5px_rgba(249,115,22,0.4)] flex items-center justify-center z-[60] hover:scale-110 active:scale-95 transition-all duration-300 group"
       >
-        <MessageCircle size={24} />
+        <MessageCircle size={28} className="group-hover:rotate-12 transition-transform duration-300" />
         {hasUnread && !isOpen && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full border-2 border-white flex items-center justify-center animate-bounce shadow-md">
-            <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+          <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full border-4 border-white flex items-center justify-center animate-bounce shadow-lg">
+            <span className="w-2 h-2 bg-white rounded-full"></span>
           </span>
         )}
       </motion.button>
@@ -124,26 +124,26 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             className="fixed bottom-[130px] md:bottom-24 right-6 w-[calc(100vw-3rem)] sm:w-96 h-[500px] max-h-[calc(100vh-250px)] bg-white rounded-2xl shadow-2xl flex flex-col z-[70] overflow-hidden border border-gray-100"
           >
             {/* Header */}
-            <div className="bg-orange-500 text-white p-4 flex items-center justify-between shadow-md z-10">
-              <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-5 flex items-center justify-between shadow-xl z-10">
+              <div className="flex items-center gap-4">
                 {selectedChatId && (
-                  <button onClick={() => setSelectedChatId(null)} className="hover:bg-orange-600 p-1 rounded-lg transition-colors">
+                  <button onClick={() => setSelectedChatId(null)} className="hover:bg-white/20 p-2 rounded-xl transition-all active:scale-90">
                     <ChevronLeft size={20} />
                   </button>
                 )}
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <User size={16} />
+                <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/30">
+                  <User size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">
-                    {selectedChatId ? selectedChatName : 'Chats'}
+                  <h3 className="font-black text-sm uppercase tracking-tight">
+                    {selectedChatId ? selectedChatName : 'Mensajería'}
                   </h3>
-                  <p className="text-[10px] text-orange-100">
-                    {selectedChatId ? 'En línea' : 'Selecciona un chat'}
+                  <p className="text-[10px] font-bold text-orange-100 uppercase tracking-widest opacity-80">
+                    {selectedChatId ? '• En línea ahora' : 'Canal oficial'}
                   </p>
                 </div>
               </div>
-              <button onClick={() => onToggle(false)} className="hover:bg-orange-600 p-2 rounded-full transition-colors">
+              <button onClick={() => onToggle(false)} className="hover:bg-white/20 p-2 rounded-xl transition-all active:scale-90">
                 <X size={20} />
               </button>
             </div>
@@ -317,11 +317,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
                     return (
                       <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                        <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${isMe ? 'bg-orange-500 text-white rounded-br-sm' : 'bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100'}`}>
-                          {!isMe && <p className="text-[10px] font-bold mb-1 opacity-50">{remitenteNombre}</p>}
-                          <p className="text-sm">{msg.texto}</p>
+                        <div className={`max-w-[85%] rounded-[1.5rem] px-4 py-2.5 shadow-sm ${
+                          isMe 
+                            ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-br-none shadow-orange-100' 
+                            : 'bg-white text-gray-800 rounded-bl-none border border-gray-100'
+                        }`}>
+                          {!isMe && <p className="text-[10px] font-black mb-1 text-orange-600 uppercase tracking-widest">{remitenteNombre}</p>}
+                          <p className="text-[13px] font-medium leading-relaxed">{msg.texto}</p>
                         </div>
-                        <span className="text-[10px] text-gray-400 mt-1">
+                        <span className="text-[9px] font-bold text-gray-400 mt-1.5 px-1 uppercase tracking-tight">
                           {(() => {
                             try {
                               if (!timestamp) return '';
@@ -340,20 +344,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
             {/* Input Area */}
             {selectedChatId && (
-              <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
+              <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-100 flex items-center gap-3 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.02)]">
                 <input
                   type="text"
                   value={nuevoMensaje}
                   onChange={(e) => setNuevoMensaje(e.target.value)}
                   placeholder="Escribe un mensaje..."
-                  className="flex-1 bg-gray-50 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-3 text-sm font-medium focus:ring-4 focus:ring-orange-500/10 focus:bg-white outline-none transition-all placeholder:text-gray-400"
                 />
                 <button
                   type="submit"
                   disabled={!nuevoMensaje.trim()}
-                  className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 transition-colors"
+                  className="w-12 h-12 bg-orange-500 text-white rounded-2xl flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 active:scale-90"
                 >
-                  <Send size={16} className="ml-1" />
+                  <Send size={18} className="ml-1" />
                 </button>
               </form>
             )}
