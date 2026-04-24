@@ -513,7 +513,7 @@ Estado: SOLICITUD DE ALTA`;
               >
                 <div className="aspect-square w-full max-w-[140px] sm:max-w-[200px] mx-auto mb-4 sm:mb-8 rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-xl group-hover:scale-105 transition-transform duration-500 bg-gray-50 border-4 border-white">
                   <img 
-                    src={aliado.logoUrl} 
+                    src={formatImageUrl(aliado.logoUrl)} 
                     alt={aliado.nombre} 
                     className="w-full h-full object-cover" 
                     loading="lazy" 
@@ -637,18 +637,18 @@ Estado: SOLICITUD DE ALTA`;
 
 
       {/* ÚNETE A DELIVERYEXPRESS SECTION (ALLY ACQUISITION) */}
-      <section id="unete" className="pt-4 pb-16 lg:pt-8 lg:pb-24 bg-white border-t border-gray-50">
+      <section id="unete" className="pt-24 pb-32 lg:pt-40 lg:pb-56 bg-white border-t border-gray-100">
         <div className="container mx-auto px-6 lg:px-10">
           <motion.div 
             initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }}
-            className="text-center mb-4 lg:mb-6 space-y-2"
+            className="text-center mb-16 lg:mb-24 space-y-4"
           >
             <div className="inline-flex items-center gap-2 text-orange-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4">
               <Shield size={14} /> Red de Aliados Premium
             </div>
             <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter uppercase leading-[0.9]">
-              Únete a <br/>
-              <span className="text-orange-600 italic">DELIVERYEXPRESS</span>
+              Registra tu <br/>
+              <span className="text-orange-600">Negocio</span>
             </h2>
             <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] lg:text-xs max-w-2xl mx-auto leading-relaxed">
               Transformamos tu logística en una ventaja competitiva. Lleva tus productos a miles de clientes en tiempo récord.
@@ -659,7 +659,7 @@ Estado: SOLICITUD DE ALTA`;
             {/* CARD RESTAURANTE */}
             <motion.div 
               whileHover={{ y: -10 }}
-              onClick={() => setAllyModal('restaurante')}
+              onClick={() => { setAllyModal('restaurante'); setShowAllyForm(true); }}
               className="group cursor-pointer bg-white rounded-[3.5rem] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] hover:shadow-2xl transition-all border border-gray-100"
             >
               <div className="aspect-[16/9] w-full overflow-hidden bg-gray-50">
@@ -690,26 +690,29 @@ Estado: SOLICITUD DE ALTA`;
               </div>
             </motion.div>
 
-            {/* CARD COMERCIO */}
+            {/* CARD NEGOCIO */}
             <motion.div 
               whileHover={{ y: -10 }}
-              onClick={() => setAllyModal('comercio')}
+              onClick={() => { setAllyModal('comercio'); setShowAllyForm(true); }}
               className="group cursor-pointer bg-white rounded-[3.5rem] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] hover:shadow-2xl transition-all border border-gray-100"
             >
               <div className="aspect-[16/9] w-full overflow-hidden bg-gray-50">
                 <img 
                   src={`${import.meta.env.BASE_URL}banners/bg-7.webp`} 
-                  alt="Registra tu Comercio" 
+                  alt="Registra tu Negocio" 
                   className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" 
                   loading="lazy"
                   decoding="async"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://deliveryexpressmg.com/banners/bg-7.webp';
+                  }}
                 />
               </div>
               <div className="p-10 lg:p-14 space-y-8">
                 <div className="space-y-3">
                   <div className="w-12 h-1 bg-gray-900 rounded-full" />
                   <h3 className="text-3xl lg:text-5xl font-black text-gray-900 uppercase tracking-tighter leading-tight">
-                    Registra tu <br/> <span className="text-gray-900">Comercio</span>
+                    Registra tu <br/> <span className="text-gray-900">Negocio</span>
                   </h3>
                 </div>
                 <p className="text-gray-400 font-medium text-base leading-relaxed">

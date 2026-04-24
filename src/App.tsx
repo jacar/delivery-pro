@@ -365,12 +365,9 @@ export default function App() {
           >
             <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center p-3 shadow-xl">
               <img 
-                src="icono_pwa.png" 
+                src={`${import.meta.env.BASE_URL}icono_pwa.png`} 
                 alt="App Icon" 
                 className="w-full h-full object-contain" 
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://deliveryexpressmg.com/banners/bg-7.webp';
-                }}
               />
             </div>
             <div>

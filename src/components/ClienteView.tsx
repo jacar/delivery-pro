@@ -970,7 +970,7 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                 {driverDetails && (
                   <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
                     {driverDetails.fotoUrl ? (
-                      <img src={driverDetails.fotoUrl} alt={driverDetails.nombre} className="w-16 h-16 rounded-2xl object-cover shadow-sm" />
+                      <img src={formatImageUrl(driverDetails.fotoUrl)} alt={driverDetails.nombre} className="w-16 h-16 rounded-2xl object-cover shadow-sm" />
                     ) : (
                       <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 shadow-sm">
                         <User size={24} />
