@@ -367,7 +367,7 @@ export default function App() {
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-2 shadow-lg shrink-0">
                   <img 
-                    src={`${window.location.origin}/icono_pwa.png`} 
+                    src="icono_pwa.png" 
                     alt="App Icon" 
                     className="w-full h-full object-contain"
                     onError={(e) => {

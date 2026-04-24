@@ -28,18 +28,18 @@
     <link rel="preconnect" href="https://www.webcincodev.com" />
     <link rel="dns-prefetch" href="https://www.webcincodev.com" />
     
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#f97316" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DeliveryExpress">
-    <link rel="apple-touch-icon" href="/icono_pwa.png" />
-    <link rel="icon" type="image/png" href="/icono_pwa.png" />
+    <link rel="apple-touch-icon" href="icono_pwa.png" />
+    <link rel="icon" type="image/png" href="icono_pwa.png" />
 
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
+          navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
         });
       }
     </script>
