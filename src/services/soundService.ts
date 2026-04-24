@@ -1,5 +1,10 @@
 
+const isSoundEnabled = () => {
+  return localStorage.getItem('sound_enabled') !== 'false';
+};
+
 export const playNotificationSound = () => {
+  if (!isSoundEnabled()) return;
   try {
     const audio = new Audio(`${import.meta.env.BASE_URL}alerta.mp3`);
     audio.play().catch(error => {
@@ -14,7 +19,9 @@ export const playNotificationSound = () => {
     console.error("Failed to initialize audio:", err);
   }
 };
+
 export const playChatSound = () => {
+  if (!isSoundEnabled()) return;
   try {
     const audio = new Audio(`${import.meta.env.BASE_URL}chat.mp3`);
     audio.play().catch(error => {

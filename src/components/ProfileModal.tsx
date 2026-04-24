@@ -3,7 +3,7 @@ import { Usuario } from '../types';
 import { syncUsuario } from '../services/pedidoService';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Phone, Save, Loader2 } from 'lucide-react';
+import { X, User, Phone, Save, Loader2, Bell } from 'lucide-react';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -88,6 +88,36 @@ export default function ProfileModal({ isOpen, onClose, userData }: ProfileModal
                     placeholder="+54 9 11 ..."
                     className="w-full pl-14 pr-6 py-4 rounded-2xl bg-gray-50 border-transparent focus:bg-white focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500/20 outline-none transition-all text-gray-700 font-bold"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
+                      <Bell size={20} className="text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-gray-900 uppercase tracking-tight">Sonido de Alertas</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Activar/Desactivar avisos sonoros</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newValue = !(localStorage.getItem('sound_enabled') !== 'false');
+                      localStorage.setItem('sound_enabled', newValue.toString());
+                      setNombre(nombre); // Solo para forzar re-render si no usamos un estado específico
+                      toast.info(`Sonido ${newValue ? 'activado' : 'desactivado'}`);
+                    }}
+                    className={`w-14 h-7 rounded-full transition-all relative ${
+                      localStorage.getItem('sound_enabled') !== 'false' ? 'bg-orange-500' : 'bg-gray-200'
+                    }`}
+                  >
+                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${
+                      localStorage.getItem('sound_enabled') !== 'false' ? 'left-8' : 'left-1'
+                    }`} />
+                  </button>
                 </div>
               </div>
 
