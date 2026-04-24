@@ -354,56 +354,53 @@ export default function App() {
         />
       )}
 
-      {/* PWA Install Prompt - Less Invasive Design */}
+      {/* PWA Install Prompt */}
       <AnimatePresence>
         {showInstallPrompt && (
           <motion.div 
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-24 left-6 right-6 md:left-1/2 md:-translate-x-1/2 md:max-w-2xl z-[100]"
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-24 md:bottom-10 left-6 right-6 md:left-auto md:right-10 md:w-96 z-[100] bg-gray-900 text-white p-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center text-center gap-6 border border-white/10 backdrop-blur-xl"
           >
-            <div className="bg-gray-900/90 backdrop-blur-xl text-white p-4 rounded-[2rem] shadow-2xl border border-white/10 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-2 shadow-lg shrink-0">
-                  <img 
-                    src="icono_pwa.png" 
-                    alt="App Icon" 
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://deliveryexpressmg.com/banners/bg-7.webp';
-                    }}
-                  />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black tracking-tight">DeliveryExpress</h4>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Instala la app para mejor acceso</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => { setShowInstallPrompt(false); localStorage.setItem('installPromptDismissed', 'true'); }}
-                  className="px-4 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest text-gray-400 hover:text-white transition-colors"
-                >
-                  Omitir
-                </button>
-                <button 
-                  onClick={async () => {
-                    if (deferredPrompt) {
-                      deferredPrompt.prompt();
-                      const { outcome } = await deferredPrompt.userChoice;
-                      if (outcome === 'accepted') {
-                        setShowInstallPrompt(false);
-                        localStorage.setItem('installPromptDismissed', 'true');
-                      }
+            <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center p-3 shadow-xl">
+              <img 
+                src="icono_pwa.png" 
+                alt="App Icon" 
+                className="w-full h-full object-contain" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://deliveryexpressmg.com/banners/bg-7.webp';
+                }}
+              />
+            </div>
+            <div>
+              <h4 className="text-xl font-black tracking-tight">DeliveryExpress</h4>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-2 px-4 leading-relaxed">
+                Instala la aplicación en tu escritorio para una mejor experiencia y acceso rápido.
+              </p>
+            </div>
+            <div className="flex gap-3 w-full">
+              <button 
+                onClick={() => { setShowInstallPrompt(false); localStorage.setItem('installPromptDismissed', 'true'); }}
+                className="flex-1 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+              >
+                Más tarde
+              </button>
+              <button 
+                onClick={async () => {
+                  if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                      setShowInstallPrompt(false);
+                      localStorage.setItem('installPromptDismissed', 'true');
                     }
-                  }}
-                  className="px-6 py-3 bg-orange-500 hover:bg-orange-600 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all"
-                >
-                  Instalar
-                </button>
-              </div>
+                  }
+                }}
+                className="flex-1 px-8 py-4 bg-orange-500 hover:bg-orange-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
+              >
+                Instalar
+              </button>
             </div>
           </motion.div>
         )}
