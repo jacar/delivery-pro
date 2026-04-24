@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { listenAliados, crearAliado, eliminarAliado, actualizarAliado, subirImagen } from '../services/aliadoService';
 import { Aliado, Producto } from '../types';
-import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package } from 'lucide-react';
+import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatImageUrl } from '../services/apiConfig';
 
@@ -372,26 +372,35 @@ export default function AliadosAdmin() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               {productos.map((prod) => (
-                <div key={prod.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-3xl border border-gray-100 group relative">
-                  <div className="w-16 h-16 bg-white rounded-2xl overflow-hidden shadow-sm shrink-0">
+                <div 
+                  key={prod.id} 
+                  className={`flex items-center gap-4 p-4 rounded-3xl border transition-all group relative ${
+                    editingProductoId === prod.id ? 'bg-orange-50 border-orange-200 shadow-lg' : 'bg-gray-50 border-gray-100 hover:bg-white'
+                  }`}
+                >
+                  <div className="w-16 h-16 bg-white rounded-2xl overflow-hidden shadow-sm shrink-0 border border-gray-50">
                     {prod.imagenUrl ? <img src={formatImageUrl(prod.imagenUrl)} className="w-full h-full object-cover" /> : <Package className="w-full h-full p-4 text-gray-200" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-gray-900 truncate uppercase">{prod.nombre}</p>
-                    <p className="text-xs font-bold text-orange-500">{prod.precio}</p>
+                    <p className="text-sm font-black text-gray-900 truncate uppercase tracking-tight">{prod.nombre}</p>
+                    <p className="text-xs font-bold text-orange-500">$ {Number(prod.precio).toFixed(2)}</p>
                   </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className={`flex gap-2 transition-opacity ${editingProductoId === prod.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                     <button 
                       type="button"
                       onClick={() => editProducto(prod)}
-                      className="w-10 h-10 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center"
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                        editingProductoId === prod.id ? 'bg-orange-500 text-white' : 'bg-orange-100 text-orange-500 hover:bg-orange-500 hover:text-white'
+                      }`}
+                      title="Editar Producto"
                     >
-                      <Plus size={16} className="rotate-45" />
+                      <Pencil size={16} />
                     </button>
                     <button 
                       type="button"
                       onClick={() => removeProducto(prod.id)}
-                      className="w-10 h-10 bg-red-100 text-red-500 rounded-full flex items-center justify-center"
+                      className="w-10 h-10 bg-red-100 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                      title="Eliminar Producto"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -401,61 +410,78 @@ export default function AliadosAdmin() {
             </div>
 
             {productos.length < 100 && (
-              <div className="bg-gray-50 p-6 md:p-8 rounded-[3rem] border border-gray-100 space-y-6">
+              <div className={`p-6 md:p-8 rounded-[3rem] border transition-all space-y-6 ${
+                editingProductoId ? 'bg-orange-50/50 border-orange-200 shadow-inner' : 'bg-gray-50 border-gray-100'
+              }`}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Nombre Producto</label>
+                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Nombre Producto</label>
                     <input 
                       type="text" value={pNombre} onChange={(e) => setPNombre(e.target.value)}
-                      className="w-full px-5 py-4 bg-white border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none" 
+                      className="w-full px-6 py-4 bg-white border-none rounded-2xl text-xs font-bold focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm" 
                       placeholder="Ej: Pizza Familiar"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Precio</label>
+                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Precio ($)</label>
                     <input 
                       type="text" value={pPrecio} onChange={(e) => setPPrecio(e.target.value)}
-                      className="w-full px-5 py-4 bg-white border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none" 
-                      placeholder="Ej: 12.99$"
+                      className="w-full px-6 py-4 bg-white border-none rounded-2xl text-xs font-bold focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm" 
+                      placeholder="Ej: 12.99"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Descripcion / Promo</label>
+                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Descripción / Promo</label>
                     <textarea 
                       rows={1} value={pDesc} onChange={(e) => setPDesc(e.target.value)}
-                      className="w-full px-5 py-4 bg-white border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none resize-none" 
-                      placeholder="Breve detalle..."
+                      className="w-full px-6 py-4 bg-white border-none rounded-2xl text-xs font-bold focus:ring-4 focus:ring-orange-500/10 outline-none resize-none transition-all shadow-sm" 
+                      placeholder="Breve detalle del producto..."
                     />
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-6">
-                  <div 
-                    onClick={() => document.getElementById('prod-img-input')?.click()}
-                    className="w-20 h-20 bg-white rounded-3xl border-2 border-dashed border-gray-100 flex items-center justify-center cursor-pointer group overflow-hidden"
-                  >
-                    {pImagen ? <img src={formatImageUrl(pImagen)} className="w-full h-full object-cover" /> : <ImagePlus size={20} className="text-gray-200 group-hover:text-orange-500" />}
-                    <input id="prod-img-input" type="file" accept="image/*" onChange={handleProductImageChange} className="hidden" />
+                <div className="flex items-center justify-between gap-6 flex-wrap">
+                  <div className="flex items-center gap-4">
+                    <div 
+                      onClick={() => document.getElementById('prod-img-input')?.click()}
+                      className="w-20 h-20 bg-white rounded-3xl border-2 border-dashed border-gray-200 hover:border-orange-500 transition-all flex items-center justify-center cursor-pointer group overflow-hidden shadow-sm"
+                    >
+                      {pImagen ? <img src={formatImageUrl(pImagen)} className="w-full h-full object-cover" /> : <ImagePlus size={20} className="text-gray-200 group-hover:text-orange-500" />}
+                      <input id="prod-img-input" type="file" accept="image/*" onChange={handleProductImageChange} className="hidden" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Imagen del Producto</p>
+                      <button 
+                        type="button"
+                        onClick={() => document.getElementById('prod-img-input')?.click()}
+                        className="text-xs font-bold text-orange-500 hover:underline"
+                      >
+                        {pImagen ? 'Cambiar Imagen' : 'Subir Imagen'}
+                      </button>
+                    </div>
                   </div>
-                  <button 
-                    type="button"
-                    onClick={addOrUpdateProducto}
-                    className="bg-gray-900 text-white px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-orange-500 transition-all flex items-center gap-2"
-                  >
-                    {editingProductoId ? 'Actualizar Producto' : 'Añadir Producto'} <Plus size={14} />
-                  </button>
-                  {editingProductoId && (
+
+                  <div className="flex items-center gap-4">
+                    {editingProductoId && (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setEditingProductoId(null);
+                          setPNombre(''); setPPrecio(''); setPDesc(''); setPImagen(null); setPImageFile(null);
+                        }}
+                        className="px-6 py-4 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    )}
                     <button 
                       type="button"
-                      onClick={() => {
-                        setEditingProductoId(null);
-                        setPNombre(''); setPPrecio(''); setPDesc(''); setPImagen(null); setPImageFile(null);
-                      }}
-                      className="text-[10px] font-black uppercase text-gray-400 hover:text-red-500"
+                      onClick={addOrUpdateProducto}
+                      className="bg-gray-900 text-white px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-orange-500 transition-all flex items-center gap-3 shadow-xl shadow-gray-200"
                     >
-                      Cancelar
+                      {editingProductoId ? <><Pencil size={14} /> Actualizar Producto</> : <><Plus size={14} /> Añadir al Menú</>}
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
             )}
