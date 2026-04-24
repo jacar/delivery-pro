@@ -364,7 +364,7 @@ export default function App() {
             className="fixed bottom-24 md:bottom-10 left-6 right-6 md:left-auto md:right-10 md:w-96 z-[100] bg-gray-900 text-white p-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center text-center gap-6 border border-white/10 backdrop-blur-xl"
           >
             <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center p-3 shadow-xl">
-              <img src="/icono_pwa.png" alt="App Icon" className="w-full h-full object-contain" />
+              <img src={`${import.meta.env.BASE_URL}icono_pwa.png`} alt="App Icon" className="w-full h-full object-contain" />
             </div>
             <div>
               <h4 className="text-xl font-black tracking-tight">DeliveryExpress</h4>
