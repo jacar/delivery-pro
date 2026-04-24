@@ -3,6 +3,7 @@ import { listenAliados, crearAliado, eliminarAliado, actualizarAliado, subirImag
 import { Aliado, Producto } from '../types';
 import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatImageUrl } from '../services/apiConfig';
 
 export default function AliadosAdmin() {
   const [aliados, setAliados] = useState<Aliado[]>([]);
@@ -321,7 +322,7 @@ export default function AliadosAdmin() {
                     className="relative h-32 w-32 bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-200 hover:border-orange-500 transition-all flex items-center justify-center cursor-pointer overflow-hidden group shadow-inner"
                   >
                     {logoBase64 ? (
-                      <img src={logoBase64} className="w-full h-full object-cover" />
+                      <img src={formatImageUrl(logoBase64)} className="w-full h-full object-cover" />
                     ) : (
                       <ImagePlus size={24} className="text-gray-300 group-hover:text-orange-500" />
                     )}
@@ -334,7 +335,7 @@ export default function AliadosAdmin() {
                   <div className="flex flex-wrap gap-3">
                     {galeriaItems.map((item) => (
                       <div key={item.id} className="relative w-16 h-16 rounded-2xl overflow-hidden group">
-                        <img src={item.url} className="w-full h-full object-cover" />
+                        <img src={formatImageUrl(item.url)} className="w-full h-full object-cover" />
                         <button 
                           type="button"
                           onClick={() => removeGalleryImage(item.id)}
@@ -373,7 +374,7 @@ export default function AliadosAdmin() {
               {productos.map((prod) => (
                 <div key={prod.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-3xl border border-gray-100 group relative">
                   <div className="w-16 h-16 bg-white rounded-2xl overflow-hidden shadow-sm shrink-0">
-                    {prod.imagenUrl ? <img src={prod.imagenUrl} className="w-full h-full object-cover" /> : <Package className="w-full h-full p-4 text-gray-200" />}
+                    {prod.imagenUrl ? <img src={formatImageUrl(prod.imagenUrl)} className="w-full h-full object-cover" /> : <Package className="w-full h-full p-4 text-gray-200" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-gray-900 truncate uppercase">{prod.nombre}</p>
@@ -433,7 +434,7 @@ export default function AliadosAdmin() {
                     onClick={() => document.getElementById('prod-img-input')?.click()}
                     className="w-20 h-20 bg-white rounded-3xl border-2 border-dashed border-gray-100 flex items-center justify-center cursor-pointer group overflow-hidden"
                   >
-                    {pImagen ? <img src={pImagen} className="w-full h-full object-cover" /> : <ImagePlus size={20} className="text-gray-200 group-hover:text-orange-500" />}
+                    {pImagen ? <img src={formatImageUrl(pImagen)} className="w-full h-full object-cover" /> : <ImagePlus size={20} className="text-gray-200 group-hover:text-orange-500" />}
                     <input id="prod-img-input" type="file" accept="image/*" onChange={handleProductImageChange} className="hidden" />
                   </div>
                   <button 
@@ -480,7 +481,7 @@ export default function AliadosAdmin() {
           <div key={aliado.id} className="bg-white p-6 rounded-[3rem] border border-gray-50 shadow-xl shadow-gray-500/5 group">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-gray-50 rounded-[2rem] overflow-hidden shadow-inner shrink-0 leading-[0]">
-                <img src={aliado.logoUrl} alt={aliado.nombre} className="w-full h-full object-cover" />
+                <img src={formatImageUrl(aliado.logoUrl)} alt={aliado.nombre} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-black text-gray-900 uppercase tracking-tighter truncate">{aliado.nombre}</h4>

@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import TrackingMap from './TrackingMap';
 import AddressInputWithMap from './AddressInputWithMap';
 import { useRef } from 'react';
+import { formatImageUrl } from '../services/apiConfig';
 
 interface ClienteViewProps {
   userData: Usuario;
@@ -589,7 +590,7 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                     >
                       <div className="aspect-square w-full max-w-[120px] mx-auto mb-4 rounded-3xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-500 bg-gray-50 border-4 border-white">
                         <img 
-                          src={aliado.logoUrl} 
+                          src={formatImageUrl(aliado.logoUrl)} 
                           alt={aliado.nombre} 
                           className="w-full h-full object-cover" 
                           loading="lazy"
@@ -787,7 +788,7 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                 <div className="flex items-center gap-6">
                   <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center overflow-hidden border border-orange-100">
                     {selectedAliado.logoUrl ? (
-                      <img src={selectedAliado.logoUrl} alt={selectedAliado.nombre} className="w-full h-full object-cover" />
+                      <img src={formatImageUrl(selectedAliado.logoUrl)} alt={selectedAliado.nombre} className="w-full h-full object-cover" />
                     ) : (
                       <Store className="text-orange-500" size={24} />
                     )}
@@ -829,7 +830,7 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                       >
                         <div className="w-24 h-24 rounded-2xl bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-50">
                           {producto.imagenUrl ? (
-                            <img src={producto.imagenUrl} alt={producto.nombre} className="w-full h-full object-cover" />
+                            <img src={formatImageUrl(producto.imagenUrl)} alt={producto.nombre} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-200">
                               <Package size={24} />

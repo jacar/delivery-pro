@@ -16,5 +16,20 @@ const getApiBaseUrl = () => {
     return `${origin}/api`;
 };
 
+
 export const API_BASE_URL = getApiBaseUrl();
 console.log('API_BASE_URL detectada:', API_BASE_URL);
+
+/**
+ * Formatea una URL de imagen para asegurar que sea absoluta.
+ */
+export const formatImageUrl = (url: string | null | undefined) => {
+    if (!url) return undefined;
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    
+    // El dominio base para el storage es el mismo que la API sin el sufijo /api
+    const domain = 'https://deliveryexpressmg.com';
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    
+    return `${domain}${cleanUrl}`;
+};
