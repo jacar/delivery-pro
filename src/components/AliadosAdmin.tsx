@@ -524,7 +524,7 @@ export default function AliadosAdmin() {
                   className="w-10 h-10 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all"
                   title="Editar"
                 >
-                  <Plus size={18} className="rotate-45" />
+                  <Pencil size={18} />
                 </button>
                 <button 
                   onClick={() => handleDelete(aliado)}
