@@ -112,15 +112,23 @@ export const actualizarUbicacionRepartidor = async (pedidoId: string, lat: numbe
 
 // POLLING PARA PEDIDOS (REEMPLAZO DE LISTENERS)
 export const listenPedidosDisponibles = (callback: (pedidos: Pedido[]) => void) => {
-  const fetchLocal = async () => {
+  let lastData = '';
+  let active = true;
+  const poll = async () => {
+    if (!active) return;
     try {
       const all = await apiFetch('/orders');
-      callback(all.filter((p: any) => p.estado === 'disponible'));
+      const filtered = all.filter((p: any) => p.estado === 'disponible');
+      const current = JSON.stringify(filtered);
+      if (current !== lastData) {
+        lastData = current;
+        callback(filtered);
+      }
     } catch (e) { console.error(e); }
+    setTimeout(poll, 10000);
   };
-  fetchLocal();
-  const interval = setInterval(fetchLocal, 6000);
-  return () => clearInterval(interval);
+  poll();
+  return () => { active = false; };
 };
 
 export const listenMisPedidosCliente = (clienteId: string, callback: (pedidos: Pedido[]) => void) => {
@@ -136,15 +144,22 @@ export const listenMisPedidosCliente = (clienteId: string, callback: (pedidos: P
 };
 
 export const listenTodosLosPedidos = (callback: (pedidos: Pedido[]) => void) => {
-  const fetchLocal = async () => {
+  let lastData = '';
+  let active = true;
+  const poll = async () => {
+    if (!active) return;
     try {
       const data = await apiFetch('/orders');
-      callback(data);
+      const current = JSON.stringify(data);
+      if (current !== lastData) {
+        lastData = current;
+        callback(data);
+      }
     } catch (e) { console.error(e); }
+    setTimeout(poll, 12000);
   };
-  fetchLocal();
-  const interval = setInterval(fetchLocal, 6000);
-  return () => clearInterval(interval);
+  poll();
+  return () => { active = false; };
 };
 
 export const listenMisPedidosMotorizado = (motorizadoId: string, callback: (pedidos: Pedido[]) => void) => {
@@ -190,14 +205,19 @@ export const syncUsuario = async (usuario: Usuario) => {
 };
 
 export const listenUsuarios = (callback: (usuarios: Usuario[]) => void) => {
+  let lastData = '';
   const fetchLocal = async () => {
     try {
       const data = await apiFetch('/users'); 
-      callback(data);
+      const current = JSON.stringify(data);
+      if (current !== lastData) {
+        lastData = current;
+        callback(data);
+      }
     } catch (e) { console.error(e); }
   };
   fetchLocal();
-  const interval = setInterval(fetchLocal, 5000); // 5 seconds instead of 30s
+  const interval = setInterval(fetchLocal, 15000); // 15s for users list
   return () => clearInterval(interval);
 };
 

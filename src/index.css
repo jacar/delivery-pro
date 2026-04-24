@@ -23,7 +23,6 @@ html, body {
   max-width: 100vw;
   overflow-x: hidden;
   position: relative;
-  overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile if desired, or keep it */
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
 }

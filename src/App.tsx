@@ -275,7 +275,7 @@ export default function App() {
               transition={{ duration: 0.3 }}
             >
               {(() => {
-                if (activeMobileTab === 'home') return <HomeInformativo onStart={() => setActiveMobileTab('pedidos')} />;
+                if (activeMobileTab === 'home' && userData?.rol === 'cliente') return <HomeInformativo onStart={() => setActiveMobileTab('pedidos')} />;
                 
                 if (userData?.rol === 'admin') return <AdminView activeTab={activeMobileTab} />;
                 if (userData?.rol === 'motorizado') return <RepartidorView userData={userData} activeTab={activeMobileTab} />;

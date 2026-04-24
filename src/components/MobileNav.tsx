@@ -10,9 +10,13 @@ interface MobileNavProps {
 
 export default function MobileNav({ rol, onNavigate, hasUnreadChat }: MobileNavProps) {
   const navItems = [
-    ...(rol === 'cliente' ? [{ id: 'home', icon: LayoutDashboard, label: 'Inicio' }] : []),
+    { id: 'home', icon: LayoutDashboard, label: rol === 'motorizado' ? 'Mis Entregas' : 'Inicio' },
     { id: 'chat', icon: MessageCircle, label: 'Chat' },
-    { id: 'pedidos', icon: Package, label: rol === 'admin' ? 'Gestión' : (rol === 'motorizado' ? 'Pedidos' : 'Mis Pedidos') },
+    ...(rol !== 'motorizado' ? [{ 
+      id: 'pedidos', 
+      icon: Package, 
+      label: rol === 'admin' ? 'Gestión' : 'Mis Pedidos' 
+    }] : []),
     ...(rol === 'admin' ? [{ id: 'usuarios', icon: User, label: 'Usuarios' }] : []),
     { id: 'notificaciones', icon: Bell, label: 'Alertas' },
     { id: 'perfil', icon: User, label: 'Perfil' },
@@ -31,11 +35,7 @@ export default function MobileNav({ rol, onNavigate, hasUnreadChat }: MobileNavP
           className="p-3 rounded-2xl text-gray-500 hover:text-orange-500 transition-colors flex flex-col items-center gap-0.5"
         >
           <div className="relative">
-            {item.id === 'chat' ? (
-              <img src="/burbuja-de-chat.png" alt="Chat" className="w-5 h-5 object-contain" />
-            ) : (
-              <item.icon size={18} />
-            )}
+            <item.icon size={18} />
             {item.id === 'chat' && hasUnreadChat && (
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
             )}

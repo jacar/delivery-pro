@@ -117,40 +117,33 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
 
     let watchId: number | null = null;
     let lastUpdate = 0;
-    let lastCoords: [number, number] | null = null;
-    const THROTTLE_MS = 60000; // 1 minuto si no hay movimiento brusco
+    let lastUpdateServer = 0;
     const DISTANCE_THRESHOLD = 100; // 100 metros
 
     if (navigator.geolocation) {
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          
           if (!isValidCoord(latitude, longitude)) return;
 
-          // Update local state for map immediately
-          setCurrentCoords([latitude, longitude]);
+          const now = Date.now();
+          // Solo actualizamos el estado local si ha pasado tiempo o hay cambio real
+          if (now - lastUpdate > 5000) { // Throttle UI updates to 5s
+            setCurrentCoords([latitude, longitude]);
+            lastUpdate = now;
+          }
           
           if (activePedido) {
-            const now = Date.now();
-            // Frecuencia fija de 10 segundos según disponibilidad y ahorro solicitado
-            const MIN_INTERVAL = 10000; 
-
-            if (now - lastUpdate > MIN_INTERVAL) {
+            // Actualización al servidor cada 30 segundos para ahorrar batería y datos
+            const SERVER_UPDATE_INTERVAL = 30000; 
+            if (now - (lastUpdateServer || 0) > SERVER_UPDATE_INTERVAL) {
               actualizarUbicacionRepartidor(activePedido.id, latitude, longitude);
-              lastUpdate = now;
-              lastCoords = [latitude, longitude];
+              lastUpdateServer = now;
             }
           }
         },
-        (error) => {
-          console.error('Error de GPS:', error);
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 30000,
-          timeout: 20000
-        }
+        (error) => console.error('Error de GPS:', error),
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
       );
     }
 
@@ -303,7 +296,8 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
 
       {/* Active Map Section */}
       {activeTab === 'misPedidos' && (
-      <AnimatePresence>
+        <>
+          <AnimatePresence>
         {misPedidos.some(p => p.estado !== 'entregado') && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -498,97 +492,9 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
           </AnimatePresence>
         </div>
       </div>
+        </>
       )}
 
-      {/* Pedidos Disponibles (Pool) - Solo si está en la pestaña de Disponibles */}
-      {activeTab === 'disponibles' && (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3 uppercase tracking-tight">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Package className="text-blue-600" size={20} />
-            </div>
-            Pedidos Disponibles
-          </h2>
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Actualizado recién</span>
-        </div>
-
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold flex items-center gap-3 border border-red-100"
-          >
-            <AlertCircle size={20} /> {error}
-          </motion.div>
-        )}
-
-        <div className="grid grid-cols-1 gap-4">
-          <AnimatePresence mode="popLayout">
-            {disponibles.length === 0 ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100"
-              >
-                <p className="text-gray-400 font-bold">No hay pedidos nuevos en el área</p>
-              </motion.div>
-            ) : (
-              disponibles.map((pedido, index) => (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  key={pedido.id} 
-                  className="bg-white p-6 rounded-3xl shadow-sm border border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-xl hover:shadow-blue-500/5 transition-all group"
-                >
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                        {pedido.tipo}
-                      </span>
-                      <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-1">
-                        <Clock size={12} />
-                        {(() => {
-                          try {
-                            if (!pedido.timestamp) return 'Ahora';
-                            const d = (pedido.timestamp as any).toDate ? (pedido.timestamp as any).toDate() : new Date(pedido.timestamp as any);
-                            return format(d, "HH:mm", { locale: es });
-                          } catch (e) { return 'Ahora'; }
-                        })()}
-                      </span>
-                    </div>
-                    <h4 className="font-black text-gray-900 text-lg group-hover:text-blue-600 transition-colors">{pedido.descripcion}</h4>
-                    <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
-                      <div className="flex items-center gap-1.5">
-                        <User size={14} className="text-blue-400" /> 
-                        {pedido.cliente_nombre || 'Cliente'}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <MapPin size={14} className="text-blue-400" /> 
-                        {pedido.ubicacion_entrega?.direccion || 'Destino'}
-                      </div>
-                    </div>
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleTomarPedido(pedido.id)}
-                    disabled={loading === pedido.id || !isOnline || userData.ocupado}
-                    className={`font-black px-10 py-4 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 ${
-                      isOnline && !userData.ocupado ? 'bg-gray-900 hover:bg-blue-600 text-white shadow-gray-200' : 'bg-gray-100 text-gray-400 shadow-none cursor-not-allowed'
-                    }`}
-                  >
-                    {loading === pedido.id ? <Loader2 className="animate-spin" /> : isOnline ? (userData.ocupado ? 'Ocupado' : 'Aceptar') : 'Fuera de Línea'}
-                  </motion.button>
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-      )}
     </div>
   );
 }
