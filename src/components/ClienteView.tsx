@@ -98,6 +98,23 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
       setAliados(data);
     });
 
+    // Cargar carrito pendiente
+    const saved = localStorage.getItem('pending_cart');
+    if (saved) {
+      try {
+        const { cart: savedCart, aliado: savedAliado } = JSON.parse(saved);
+        if (savedCart && savedCart.length > 0) {
+          setCart(savedCart);
+          setSelectedAliado(savedAliado);
+          setIsMenuModalOpen(true); // Abrir el menú del aliado automáticamente
+          toast.info("Hemos recuperado tu pedido pendiente.");
+        }
+        localStorage.removeItem('pending_cart'); // Limpiar una vez recuperado
+      } catch (e) {
+        console.error("Error recovering pending cart", e);
+      }
+    }
+
     // Cargar tarifas generales
     getTarifasGenerales().then(setTarifasGenerales);
 

@@ -46,7 +46,8 @@ export default function HomeInformativo({ onStart }: HomeInformativoProps) {
   const [allyError, setAllyError] = useState(false);
 
   const effectiveUser = userData || localUser;
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const [cart, setCart] = useState<{producto: any, cantidad: number}[]>([]);
+  const [isCartLoaded, setIsCartLoaded] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
 
@@ -83,12 +84,16 @@ export default function HomeInformativo({ onStart }: HomeInformativoProps) {
     );
   };
 
-  const updateQuantity = (productoId: string, delta: number) => {
+  const updateQuantity = (producto: any, delta: number) => {
     setCart(prev => {
-      const actual = prev[productoId] || 0;
-      const newValue = Math.max(0, actual + delta);
-      if (newValue === 0) { const copy = { ...prev }; delete copy[productoId]; return copy; }
-      return { ...prev, [productoId]: newValue };
+      const existing = prev.find(item => item.producto.id === producto.id);
+      if (existing) {
+        const newValue = Math.max(0, existing.cantidad + delta);
+        if (newValue === 0) return prev.filter(item => item.producto.id !== producto.id);
+        return prev.map(item => item.producto.id === producto.id ? { ...item, cantidad: newValue } : item);
+      }
+      if (delta > 0) return [...prev, { producto, cantidad: delta }];
+      return prev;
     });
   };
 
@@ -105,8 +110,32 @@ export default function HomeInformativo({ onStart }: HomeInformativoProps) {
     }
   }, [userData]);
 
+  // Persistencia de carrito
+  useEffect(() => {
+    const saved = localStorage.getItem('pending_cart');
+    if (saved) {
+      try {
+        const { cart: savedCart, aliado: savedAliado } = JSON.parse(saved);
+        if (savedCart) setCart(savedCart);
+        if (savedAliado) setSelectedAliado(savedAliado);
+      } catch (e) {
+        console.error("Error loading pending cart", e);
+      }
+    }
+    setIsCartLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isCartLoaded) return;
+    if (cart.length > 0 || selectedAliado) {
+      localStorage.setItem('pending_cart', JSON.stringify({ cart, aliado: selectedAliado }));
+    } else {
+      localStorage.removeItem('pending_cart');
+    }
+  }, [cart, selectedAliado, isCartLoaded]);
+
   const handleProceedToCheckout = () => {
-    if (Object.keys(cart).length === 0) {
+    if (cart.length === 0) {
       toast.error("Selecciona al menos un producto pulsando en [+].");
       return;
     }
@@ -144,8 +173,8 @@ export default function HomeInformativo({ onStart }: HomeInformativoProps) {
     if (!direccion) { toast.error("Ingresa tu dirección de entrega."); return; }
     setLoading(true);
     try {
-      const prods = selectedAliado.productos?.filter(p => cart[p.id]) || [];
-      const resumen = prods.map(p => `${cart[p.id]}x ${p.nombre}`).join(', ');
+      const prods = cart;
+      const resumen = prods.map(item => `${item.cantidad}x ${item.producto.nombre}`).join(', ');
 
       await createPedido(
         effectiveUser.uid, effectiveUser.nombre, effectiveUser.telefono || regTelefono,
@@ -155,7 +184,7 @@ export default function HomeInformativo({ onStart }: HomeInformativoProps) {
         { lat: 0, lng: 0, direccion: direccion }
       );
       toast.success("¡Envío Express coordinado!");
-      const pedidoTexto = prods.map(p => `- *${cart[p.id]}* ${p.nombre}`).join('%0A');
+      const pedidoTexto = prods.map(item => `- *${item.cantidad}* ${item.producto.nombre}`).join('%0A');
       const message = encodeURIComponent(`¡Hola ${selectedAliado.nombre}! Soy ${effectiveUser.nombre}. %0AMe gustaría pedir:%0A${pedidoTexto}%0A%0A*Dirección de entrega:* ${direccion}%0A%0A---%0A🛵 *YA COORDINÉ EL DELIVERY CON ENVÍOS EXPRESS*.`);
       setTimeout(() => {
         window.open(`https://wa.me/${selectedAliado.whatsapp}?text=${message}`, '_blank');
@@ -169,7 +198,8 @@ export default function HomeInformativo({ onStart }: HomeInformativoProps) {
   const handleClose = () => {
     setSelectedAliado(null);
     setCheckoutStep('menu');
-    setCart({});
+    setCart([]);
+    localStorage.removeItem('pending_cart');
   };
 
   const handleAllySubmit = () => {
@@ -204,6 +234,13 @@ Estado: SOLICITUD DE ALTA`;
     setAllyDireccion('');
     setAllyMovil('');
     setAllyEmail('');
+  };
+
+  const handleStart = () => {
+    if (cart.length > 0 || selectedAliado) {
+      localStorage.setItem('pending_cart', JSON.stringify({ cart, aliado: selectedAliado }));
+    }
+    onStart();
   };
 
   const scrollToSection = (id: string) => {
@@ -272,7 +309,7 @@ Estado: SOLICITUD DE ALTA`;
             <motion.button 
               whileHover={{ scale: 1.05 }} 
               whileTap={{ scale: 0.95 }}
-              onClick={onStart}
+              onClick={handleStart}
               className="bg-orange-600 text-white px-8 py-3.5 rounded-full font-black text-xs uppercase tracking-[0.1em] shadow-lg shadow-orange-600/20 hover:bg-orange-500 transition-colors flex items-center gap-2"
             >
               Registrarse y Ordenar
@@ -299,7 +336,7 @@ Estado: SOLICITUD DE ALTA`;
             {['Servicios', 'Rastreo', 'Contacto'].map((item) => (
               <button key={item} onClick={() => scrollToSection(item.toLowerCase())} className="text-4xl font-black text-left tracking-tighter uppercase">{item}</button>
             ))}
-            <button onClick={onStart} className="mt-4 bg-orange-600 text-white py-6 rounded-3xl font-black uppercase tracking-widest">Registrarse y Ordenar</button>
+            <button onClick={handleStart} className="mt-4 bg-orange-600 text-white py-6 rounded-3xl font-black uppercase tracking-widest">Registrarse y Ordenar</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -374,7 +411,7 @@ Estado: SOLICITUD DE ALTA`;
               className="flex flex-col sm:flex-row items-center gap-6 pt-4"
             >
               <button 
-                onClick={onStart}
+                onClick={handleStart}
                 className="w-full sm:w-auto bg-orange-600 text-white px-12 py-6 rounded-[2rem] font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-2xl shadow-orange-600/30 hover:bg-orange-500 transition-all hover:scale-105 active:scale-95"
               >
                 Comenzar <ShoppingBag size={20} />
@@ -830,14 +867,18 @@ Estado: SOLICITUD DE ALTA`;
                                 <h4 className="text-sm font-black text-gray-900 uppercase">{prod.nombre}</h4>
                                 <div className="text-orange-600 font-black">{prod.precio}</div>
                               </div>
-                              <div className="flex items-center gap-3 bg-white px-3 py-2 rounded-2xl shadow-sm">
-                                {cart[prod.id] > 0 && (
-                                  <>
-                                    <button onClick={() => updateQuantity(prod.id, -1)} className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold">-</button>
-                                    <span className="font-black text-xs w-4 text-center">{cart[prod.id]}</span>
-                                  </>
-                                )}
-                                <button onClick={() => updateQuantity(prod.id, 1)} className="w-6 h-6 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold">+</button>
+                               <div className="flex items-center gap-3 bg-white px-3 py-2 rounded-2xl shadow-sm">
+                                {(() => {
+                                  const item = cart.find(i => i.producto.id === prod.id);
+                                  const qty = item?.cantidad || 0;
+                                  return qty > 0 ? (
+                                    <>
+                                      <button onClick={() => updateQuantity(prod, -1)} className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold">-</button>
+                                      <span className="font-black text-xs w-4 text-center">{qty}</span>
+                                    </>
+                                  ) : null;
+                                })()}
+                                <button onClick={() => updateQuantity(prod, 1)} className="w-6 h-6 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold">+</button>
                               </div>
                             </div>
                           ))}
@@ -849,7 +890,7 @@ Estado: SOLICITUD DE ALTA`;
                       onClick={handleProceedToCheckout}
                       className="w-full bg-orange-600 text-white py-6 rounded-3xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl shadow-orange-600/20"
                     >
-                      {Object.keys(cart).length > 0 ? `Hacer Pedido (${Object.values(cart).reduce((a, b) => a + b, 0)} items)` : 'Seleccionar Productos'}
+                      {cart.length > 0 ? `Hacer Pedido (${cart.reduce((a, b) => a + b.cantidad, 0)} items)` : 'Seleccionar Productos'}
                     </motion.button>
                   </>
                 )}
