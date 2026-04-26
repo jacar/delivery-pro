@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import ScrollSequence from './ScrollSequence';
 
-import { API_BASE_URL } from '../services/apiConfig';
+import { API_BASE_URL, formatImageUrl } from '../services/apiConfig';
 
 interface HomeInformativoProps {
   onStart: () => void;
@@ -813,7 +813,7 @@ Estado: SOLICITUD DE ALTA`;
                   <>
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 text-center sm:text-left">
                        <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-50 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border-4 border-gray-50 flex-shrink-0 shadow-lg">
-                          <img src={selectedAliado.logoUrl} alt={selectedAliado.nombre} className="w-full h-full object-cover" loading="lazy" />
+                          <img src={formatImageUrl(selectedAliado.logoUrl)} alt={selectedAliado.nombre} className="w-full h-full object-cover" loading="lazy" />
                        </div>
                        <div className="space-y-1 sm:pt-2">
                           <h3 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tighter uppercase leading-tight sm:leading-none whitespace-normal break-words">{selectedAliado.nombre}</h3>

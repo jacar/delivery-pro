@@ -136,13 +136,20 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
     return cart.find(i => i.producto.id === productId)?.cantidad || 0;
   };
 
-  const cartTotal = cart.reduce((acc, item) => acc + (item.producto.precio * item.cantidad), 0);
+  const cartTotal = cart.reduce((acc, item) => {
+    const p = String(item.producto.precio || '0').replace(/[^0-9.]/g, '');
+    const num = parseFloat(p);
+    return acc + (isNaN(num) ? 0 : num * item.cantidad);
+  }, 0);
 
   const handleConfirmCartOrder = async () => {
     if (cart.length === 0 || !selectedAliado) return;
     setLoading(true);
     try {
-      const desc = `PEDIDO ${selectedAliado.nombre.toUpperCase()}: ${cart.map(i => `${i.cantidad}x ${i.producto.nombre}`).join(', ')}`;
+      const deliveryFee = Number(tarifasGenerales.compra?.precio || 0);
+      const totalConDelivery = cartTotal + deliveryFee;
+
+      const desc = `PEDIDO ${selectedAliado.nombre.toUpperCase()}: ${cart.map(i => `${i.cantidad}x ${i.producto.nombre}`).join(', ')} | Subtotal: $${cartTotal.toFixed(2)} + Delivery: $${deliveryFee.toFixed(2)} | TOTAL: $${totalConDelivery.toFixed(2)}`;
       
       const rawRecogidaDir = selectedAliado.direccion || `Local de ${selectedAliado.nombre}`;
       const ubicacionRecogida = {
@@ -801,6 +808,13 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                         <MapPin size={12} /> {selectedAliado.direccion || 'Ubicación Premium'}
                       </p>
                     </div>
+                    {/* Delivery Badge */}
+                    <div className="flex items-center gap-2 mt-3">
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-xl border border-orange-100 shadow-sm">
+                        <Bike size={14} className="animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Servicio Delivery: $ {Number(tarifasGenerales.compra?.precio || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <button 
@@ -843,7 +857,12 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                             {producto.descripcion || 'Producto de alta calidad seleccionado para ti.'}
                           </p>
                           <div className="flex items-center justify-between">
-                            <span className="text-xl font-black text-orange-600">$ {Number(producto.precio).toFixed(2)}</span>
+                                                         <span className="text-xl font-black text-orange-600">$ {(() => {
+                               const val = String(producto.precio || '0').replace(/[^0-9.]/g, '');
+                               const num = parseFloat(val);
+                               return isNaN(num) ? '0.00' : num.toFixed(2);
+                             })()}</span>
+
                             
                             <div className="flex items-center gap-3">
                               {getCartItemQuantity(producto.id) > 0 ? (
@@ -886,19 +905,29 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                 <motion.div 
                   initial={{ y: 50 }}
                   animate={{ y: 0 }}
-                  className="p-8 bg-white border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-6"
+                  className="p-8 bg-white border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6"
                 >
-                  <div className="flex items-center gap-5">
+                  <div className="flex flex-wrap items-center gap-6">
                     <div className="w-14 h-14 bg-orange-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-100">
                       <ShoppingCart size={24} />
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resumen de Pedido</p>
-                      <h4 className="text-xl font-black text-gray-900">{cart.length} Productos • $ {Number(cartTotal).toFixed(2)}</h4>
+                    <div className="flex gap-8">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Productos</p>
+                        <h4 className="text-xl font-black text-gray-900">$ {Number(cartTotal).toFixed(2)}</h4>
+                      </div>
+                      <div className="text-orange-500">
+                        <p className="text-[10px] font-black opacity-60 uppercase tracking-widest">Delivery</p>
+                        <h4 className="text-xl font-black">+ $ {Number(tarifasGenerales.compra?.precio || 0).toFixed(2)}</h4>
+                      </div>
+                      <div className="border-l border-gray-100 pl-8">
+                        <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Total a Pagar</p>
+                        <h4 className="text-2xl font-black text-gray-900">$ {(cartTotal + Number(tarifasGenerales.compra?.precio || 0)).toFixed(2)}</h4>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex gap-3 w-full sm:w-auto">
+                  <div className="flex gap-3 w-full md:w-auto">
                     <button 
                       onClick={() => setCart([])}
                       className="px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-400 hover:text-gray-900 hover:bg-gray-50 flex items-center gap-2"
@@ -910,7 +939,7 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                       whileTap={{ scale: 0.95 }}
                       onClick={handleConfirmCartOrder}
                       disabled={loading}
-                      className="flex-1 sm:flex-none px-10 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl shadow-orange-200 transition-all flex items-center justify-center gap-3"
+                      className="flex-1 md:flex-none px-10 py-5 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl shadow-orange-200 transition-all flex items-center justify-center gap-3"
                     >
                       {loading ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
                       Confirmar Compra

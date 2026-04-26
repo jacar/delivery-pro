@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { listenAliados, crearAliado, eliminarAliado, actualizarAliado, subirImagen } from '../services/aliadoService';
 import { Aliado, Producto } from '../types';
-import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package, Pencil } from 'lucide-react';
+import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package, Pencil, Edit2 } from 'lucide-react';
+import { useRef } from 'react';
 import { toast } from 'sonner';
 import { formatImageUrl } from '../services/apiConfig';
 
@@ -29,6 +30,8 @@ export default function AliadosAdmin() {
   const [pDesc, setPDesc] = useState('');
   const [pImagen, setPImagen] = useState<string | null>(null);
   const [pImageFile, setPImageFile] = useState<File | null>(null);
+
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unsub = listenAliados((data) => {
@@ -233,6 +236,13 @@ export default function AliadosAdmin() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleEditMenu = (aliado: Aliado) => {
+    handleEdit(aliado);
+    setTimeout(() => {
+      menuRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
   const handleDelete = async (aliado: Aliado) => {
     if (confirm(`¿Estás seguro de eliminar a ${aliado.nombre}?`)) {
       try {
@@ -358,7 +368,7 @@ export default function AliadosAdmin() {
             </div>
           </div>
 
-          <div className="pt-10 border-t border-gray-100">
+          <div className="pt-10 border-t border-gray-100" ref={menuRef}>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <div>
                 <h4 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Menú de Productos</h4>
@@ -522,9 +532,16 @@ export default function AliadosAdmin() {
                 <button 
                   onClick={() => handleEdit(aliado)}
                   className="w-10 h-10 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all"
-                  title="Editar"
+                  title="Editar Información"
                 >
-                  <Pencil size={18} />
+                  <Edit2 size={18} />
+                </button>
+                <button 
+                  onClick={() => handleEditMenu(aliado)}
+                  className="w-10 h-10 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all"
+                  title="Editar Menú"
+                >
+                  <Package size={18} />
                 </button>
                 <button 
                   onClick={() => handleDelete(aliado)}
