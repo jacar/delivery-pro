@@ -607,22 +607,22 @@ Estado: SOLICITUD DE ALTA`;
       </section>
 
       {/* CONTROL SECTION (Radar) */}
-      <section id="rastreo" className="pt-20 pb-4 lg:pt-32 lg:pb-8 bg-zinc-950 overflow-hidden relative">
+      <section id="rastreo" className="py-12 lg:py-20 bg-zinc-950 overflow-hidden relative">
         <div className="absolute inset-0 z-0 opacity-10">
           <div className="w-full h-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]" />
         </div>
 
-        <div className="container mx-auto px-6 lg:px-10 flex flex-col lg:flex-row items-center gap-24 relative z-10">
-          <div className="flex-1 space-y-12">
+        <div className="container mx-auto px-6 lg:px-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-16 relative z-10">
+          <div className="flex-1 space-y-8 lg:space-y-12">
             <div className="space-y-4">
               <span className="text-orange-500 text-xs font-black uppercase tracking-[0.4em]">Sala de Control</span>
-              <h2 className="text-5xl lg:text-7xl font-black text-white tracking-tighter uppercase leading-[0.9]">
+              <h2 className="text-4xl lg:text-6xl font-black text-white tracking-tighter uppercase leading-[0.9]">
                 Control <br/>
                 <span className="text-zinc-600">Rastreador Kinetic</span>
               </h2>
             </div>
 
-            <div className="space-y-10">
+            <div className="space-y-6 lg:space-y-10">
               {[
                 { n: '01', title: 'Mapeo Hiperlocal', desc: 'Visualización del repartidor en tiempo real por cada callejón de la ciudad.' },
                 { n: '02', title: 'ETA Inteligente', desc: 'Predicción exacta de llegada considerando tráfico urbano y semáforos.' },
@@ -631,7 +631,7 @@ Estado: SOLICITUD DE ALTA`;
                 <div key={i} className="flex gap-6 max-w-sm">
                   <span className="text-orange-600 text-xl font-black">{item.n}.</span>
                   <div className="space-y-2">
-                    <h4 className="text-white font-black text-lg uppercase tracking-tight">{item.title}</h4>
+                    <h4 className="text-white font-black text-base lg:text-lg uppercase tracking-tight">{item.title}</h4>
                     <p className="text-zinc-500 text-sm font-medium">{item.desc}</p>
                   </div>
                 </div>
@@ -641,7 +641,7 @@ Estado: SOLICITUD DE ALTA`;
 
           <div className="flex-1 relative flex items-center justify-center">
             {/* RADAR ANIMADO */}
-            <div className="relative w-full aspect-square max-w-[500px]">
+            <div className="relative w-full aspect-square max-w-[300px] lg:max-w-[400px]">
               <div className="absolute inset-0 border border-zinc-800 rounded-full" />
               <div className="absolute inset-[15%] border border-zinc-800 rounded-full" />
               <div className="absolute inset-[30%] border border-zinc-800 rounded-full" />
@@ -657,9 +657,9 @@ Estado: SOLICITUD DE ALTA`;
 
               {/* Centro / Motorizado */}
               <div className="absolute inset-0 flex items-center justify-center">
-                 <div className="w-48 h-48 bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl p-2">
+                 <div className="w-32 h-32 lg:w-40 lg:h-40 bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl p-2">
                     <div className="w-full h-full bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-600">
-                       <Navigation size={40} className="animate-pulse" />
+                       <Navigation size={32} className="animate-pulse" />
                     </div>
                   </div>
                </div>
