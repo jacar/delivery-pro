@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { listenAliados, crearAliado, eliminarAliado, actualizarAliado, subirImagen } from '../services/aliadoService';
-import { Aliado, Producto } from '../types';
-import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package, Pencil, Edit2 } from 'lucide-react';
+import { listenUsuarios, actualizarRolUsuario } from '../services/pedidoService';
+import { Aliado, Producto, Usuario } from '../types';
+import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package, Pencil, Edit2, UserPlus } from 'lucide-react';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 import { formatImageUrl } from '../services/apiConfig';
@@ -13,8 +14,10 @@ export default function AliadosAdmin() {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
   const [logoBase64, setLogoBase64] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   
   // Nuevo estado unificado para galería
   const [galeriaItems, setGaleriaItems] = useState<{ id: string, url: string, file?: File }[]>([]);
@@ -38,7 +41,13 @@ export default function AliadosAdmin() {
       setAliados(data);
       setLoading(false);
     });
-    return () => unsub();
+    const unsubUsers = listenUsuarios((data) => {
+      setUsuarios(data);
+    });
+    return () => {
+      unsub();
+      unsubUsers();
+    };
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,6 +190,23 @@ export default function AliadosAdmin() {
         return rest;
       }));
 
+      let nuevoAliadoOwnerEmail = ownerEmail;
+
+      if (ownerEmail) {
+        // Encontrar usuario y actualizar su rol
+        const userToPromote = usuarios.find(u => u.email?.toLowerCase() === ownerEmail.toLowerCase());
+        if (userToPromote) {
+          try {
+            await actualizarRolUsuario(userToPromote.uid, 'aliado');
+            toast.success(`Usuario ${ownerEmail} asignado como aliado`);
+          } catch(e) {
+            toast.error(`Error al promover al usuario a aliado`);
+          }
+        } else {
+          toast.warning(`Correo ${ownerEmail} no encontrado en usuarios registrados, pero se guardará.`);
+        }
+      }
+
       if (editingId) {
         await actualizarAliado(editingId, {
           nombre,
@@ -188,12 +214,15 @@ export default function AliadosAdmin() {
           whatsapp,
           logoUrl: finalLogoUrl,
           imagenes: finalGalleryUrls,
-          productos: finalProductos
+          productos: finalProductos,
+          ownerEmail: nuevoAliadoOwnerEmail
         });
         toast.success('Aliado actualizado correctamente');
       } else {
         const newId = `aliado_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
         await crearAliado(newId, nombre, finalLogoUrl, descripcion, whatsapp, finalGalleryUrls, finalProductos);
+        // Then update the created to have ownerEmail since crearAliado might not take it initially, or we need to update it
+        await actualizarAliado(newId, { ownerEmail: nuevoAliadoOwnerEmail });
         toast.success('Aliado creado correctamente');
       }
       resetForm();
@@ -209,6 +238,7 @@ export default function AliadosAdmin() {
     setNombre('');
     setDescripcion('');
     setWhatsapp('');
+    setOwnerEmail('');
     setLogoBase64(null);
     setLogoFile(null);
     setGaleriaItems([]);
@@ -227,6 +257,7 @@ export default function AliadosAdmin() {
     setNombre(aliado.nombre);
     setDescripcion(aliado.descripcion || '');
     setWhatsapp(aliado.whatsapp || '');
+    setOwnerEmail(aliado.ownerEmail || '');
     setLogoBase64(aliado.logoUrl);
     setGaleriaItems((aliado.imagenes || []).map(url => ({ 
       id: Math.random().toString(36).substr(2, 9), 
@@ -322,6 +353,18 @@ export default function AliadosAdmin() {
                     placeholder="Ej: Comida Italiana"
                   />
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1 flex items-center gap-1"><UserPlus size={12} /> Asignar Dueño (Email)</label>
+                <input
+                  type="email"
+                  value={ownerEmail}
+                  onChange={(e) => setOwnerEmail(e.target.value)}
+                  className="w-full px-6 py-5 bg-gray-50 border-none rounded-3xl text-sm font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all shadow-inner"
+                  placeholder="Ej: dueño@negocio.com"
+                />
+                <p className="text-[9px] text-gray-400 mt-1 ml-1">El usuario con este correo obtendrá el rol de 'aliado' automáticamente.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-8">

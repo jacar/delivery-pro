@@ -10,9 +10,9 @@ interface MobileNavProps {
 
 export default function MobileNav({ rol, onNavigate, hasUnreadChat }: MobileNavProps) {
   const navItems = [
-    { id: 'home', icon: LayoutDashboard, label: rol === 'motorizado' ? 'Mis Entregas' : 'Inicio' },
+    { id: 'home', icon: LayoutDashboard, label: rol === 'motorizado' ? 'Mis Entregas' : rol === 'aliado' ? 'Mi Menú' : 'Inicio' },
     { id: 'chat', icon: MessageCircle, label: 'Chat' },
-    ...(rol !== 'motorizado' ? [{ 
+    ...(rol !== 'motorizado' && rol !== 'aliado' ? [{ 
       id: 'pedidos', 
       icon: Package, 
       label: rol === 'admin' ? 'Gestión' : 'Mis Pedidos' 

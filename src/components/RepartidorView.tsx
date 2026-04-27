@@ -294,206 +294,301 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
         </button>
       </div>
 
-      {/* Active Map Section */}
+      {/* Mis Pedidos y Mapa */}
       {activeTab === 'misPedidos' && (
-        <>
-          <AnimatePresence>
-        {misPedidos.some(p => p.estado !== 'entregado') && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="space-y-6"
-          >
+        <div className="space-y-12">
+          {/* Mis Pedidos Asignados */}
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 uppercase tracking-tight">
-                <MapIcon className="text-orange-500" /> Mapa de Ruta
-              </h3>
-            </div>
-            <div className="h-[400px] w-full bg-gray-100 rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-inner relative z-10">
-              {currentCoords ? (
-                <MapContainer center={currentCoords} zoom={15} scrollWheelZoom={false}>
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  />
-                  <Marker position={currentCoords} icon={DriverIcon}>
-                    <Popup>Tu ubicación actual</Popup>
-                  </Marker>
-                  
-                  {misPedidos.filter(p => p.estado !== 'entregado').map(pedido => (
-                    <React.Fragment key={pedido.id}>
-                      {pedido.ubicacion_recogida && isValidCoord(pedido.ubicacion_recogida.lat, pedido.ubicacion_recogida.lng) && (
-                        <Marker 
-                          position={[Number(pedido.ubicacion_recogida.lat), Number(pedido.ubicacion_recogida.lng)]}
-                          icon={L.divIcon({
-                            html: `<div style="width: 32px; height: 32px; background-color: #f97316; border-radius: 50%; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: white;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 18V9c0-1-1-2-2-2H8l-5 5v4h3"/><path d="M16 18V13l-4-4"/></svg>
-                                   </div>`,
-                            className: '',
-                            iconSize: [32, 32],
-                            iconAnchor: [16, 16]
-                          })}
-                        >
-                          <Popup>Punto de Recogida: {pedido.descripcion}</Popup>
-                        </Marker>
-                      )}
-                      {pedido.ubicacion_entrega && isValidCoord(pedido.ubicacion_entrega.lat, pedido.ubicacion_entrega.lng) && (
-                        <Marker 
-                          position={[Number(pedido.ubicacion_entrega.lat), Number(pedido.ubicacion_entrega.lng)]}
-                          icon={L.divIcon({
-                            html: `<div style="width: 32px; height: 32px; background-color: #3b82f6; border-radius: 50%; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: white;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 18V9c0-1-1-2-2-2H8l-5 5v4h3"/><path d="M16 18V13l-4-4"/></svg>
-                                   </div>`,
-                            className: '',
-                            iconSize: [32, 32],
-                            iconAnchor: [16, 16]
-                          })}
-                        >
-                          <Popup>Punto de Entrega: {pedido.descripcion}</Popup>
-                        </Marker>
-                      )}
-                      {pedido.ubicacion_recogida && pedido.ubicacion_entrega && 
-                       isValidCoord(pedido.ubicacion_recogida.lat, pedido.ubicacion_recogida.lng) && 
-                       isValidCoord(pedido.ubicacion_entrega.lat, pedido.ubicacion_entrega.lng) && (
-                        <Polyline 
-                          positions={[
-                            [Number(pedido.ubicacion_recogida.lat), Number(pedido.ubicacion_recogida.lng)],
-                            [Number(pedido.ubicacion_entrega.lat), Number(pedido.ubicacion_entrega.lng)]
-                          ]} 
-                          color="#f97316"
-                          dashArray="10, 10"
-                        />
-                      )}
-                    </React.Fragment>
-                  ))}
-                  <MapRecenter coords={currentCoords} />
-                </MapContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400 font-bold">
-                  <Loader2 className="animate-spin mr-2" /> Obteniendo ubicación GPS...
+              <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3 uppercase tracking-tight">
+                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <Bike className="text-orange-600" size={20} />
                 </div>
-              )}
+                Mis Entregas
+              </h2>
+              <span className="bg-orange-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                {misPedidos.filter(p => p.estado !== 'entregado').length} Activas
+              </span>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Mis Pedidos Asignados */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3 uppercase tracking-tight">
-            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-              <Bike className="text-orange-600" size={20} />
+            <div className="grid grid-cols-1 gap-6">
+              <AnimatePresence mode="popLayout">
+                {misPedidos.filter(p => p.estado !== 'entregado').length === 0 ? (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-16 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100"
+                  >
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Bike className="text-gray-200" size={32} />
+                    </div>
+                    <p className="text-gray-400 font-bold">No tienes entregas pendientes</p>
+                  </motion.div>
+                ) : (
+                  misPedidos.filter(p => p.estado !== 'entregado').map((pedido) => (
+                    <motion.div 
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      key={pedido.id} 
+                      className="bg-white p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-orange-50 space-y-6 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 opacity-50" />
+                      
+                      <div className="flex justify-between items-start relative z-10">
+                        <div>
+                          <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                            {pedido.estado}
+                          </span>
+                          <h3 className="text-xl font-black text-gray-900 mt-3 capitalize">{pedido.tipo}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <User size={14} className="text-orange-400" />
+                            <p className="text-gray-500 font-bold text-sm">Cliente: {pedido.cliente_nombre || 'Usuario'} {pedido.cliente_telefono && `(${pedido.cliente_telefono})`}</p>
+                          </div>
+                          <p className="text-gray-500 font-medium mt-2">{pedido.descripcion}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Pedido ID</p>
+                          <p className="text-xs font-bold text-gray-400">#{pedido.id.substring(0, 8)}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 border-y border-gray-50 relative z-10">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                            <MapPin size={12} /> Recoger en
+                          </div>
+                          <p className="text-sm font-bold text-gray-700">{pedido.ubicacion_recogida?.direccion || 'No especificada'}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-[10px] font-black text-orange-300 uppercase tracking-widest">
+                            <Navigation size={12} /> Entregar en
+                          </div>
+                          <p className="text-sm font-bold text-gray-700">{pedido.ubicacion_entrega?.direccion || 'No especificada'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4 relative z-10">
+                        {pedido.estado === 'asignado' && !pedido.aceptado_por_motorizado && (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleAceptarPedido(pedido.id)}
+                            disabled={loading === pedido.id}
+                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-200"
+                          >
+                            {loading === pedido.id ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={20} /> Aceptar Pedido</>}
+                          </motion.button>
+                        )}
+                        {pedido.estado === 'asignado' && pedido.aceptado_por_motorizado && (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleActualizarEstado(pedido.id, 'en_camino')}
+                            disabled={loading === pedido.id}
+                            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-orange-200"
+                          >
+                            {loading === pedido.id ? <Loader2 className="animate-spin" /> : <><Bike size={20} /> Iniciar Entrega</>}
+                          </motion.button>
+                        )}
+                        {pedido.estado === 'en_camino' && (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleActualizarEstado(pedido.id, 'entregado')}
+                            disabled={loading === pedido.id}
+                            className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-green-200"
+                          >
+                            {loading === pedido.id ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={20} /> Confirmar Entrega</>}
+                          </motion.button>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
             </div>
-            Mis Entregas
-          </h2>
-          <span className="bg-orange-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-            {misPedidos.filter(p => p.estado !== 'entregado').length} Activas
-          </span>
-        </div>
+          </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          <AnimatePresence mode="popLayout">
-            {misPedidos.filter(p => p.estado !== 'entregado').length === 0 ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100"
+          {/* Mapa Section */}
+          <AnimatePresence>
+            {misPedidos.some(p => p.estado !== 'entregado') && (
+              <motion.div
+                key="map-container"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="space-y-6"
               >
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Bike className="text-gray-200" size={32} />
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 uppercase tracking-tight">
+                    <MapIcon className="text-orange-500" /> Mapa de Ruta
+                  </h3>
                 </div>
-                <p className="text-gray-400 font-bold">No tienes entregas pendientes</p>
+                <div className="h-[400px] w-full bg-gray-100 rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-inner relative z-10">
+                  {currentCoords ? (
+                    <MapContainer center={currentCoords} zoom={15} scrollWheelZoom={false}>
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      />
+                      <Marker position={currentCoords} icon={DriverIcon}>
+                        <Popup>Tu ubicación actual</Popup>
+                      </Marker>
+                      
+                      {misPedidos.filter(p => p.estado !== 'entregado').map(pedido => (
+                        <React.Fragment key={`map-markers-${pedido.id}`}>
+                          {pedido.ubicacion_recogida && isValidCoord(pedido.ubicacion_recogida.lat, pedido.ubicacion_recogida.lng) && (
+                            <Marker 
+                              position={[Number(pedido.ubicacion_recogida.lat), Number(pedido.ubicacion_recogida.lng)]}
+                              icon={L.divIcon({
+                                html: `<div style="width: 32px; height: 32px; background-color: #f97316; border-radius: 50%; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: white;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 18V9c0-1-1-2-2-2H8l-5 5v4h3"/><path d="M16 18V13l-4-4"/></svg>
+                                       </div>`,
+                                className: '',
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 16]
+                              })}
+                            >
+                              <Popup>Punto de Recogida: {pedido.descripcion}</Popup>
+                            </Marker>
+                          )}
+                          {pedido.ubicacion_entrega && isValidCoord(pedido.ubicacion_entrega.lat, pedido.ubicacion_entrega.lng) && (
+                            <Marker 
+                              position={[Number(pedido.ubicacion_entrega.lat), Number(pedido.ubicacion_entrega.lng)]}
+                              icon={L.divIcon({
+                                html: `<div style="width: 32px; height: 32px; background-color: #3b82f6; border-radius: 50%; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: white;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 18V9c0-1-1-2-2-2H8l-5 5v4h3"/><path d="M16 18V13l-4-4"/></svg>
+                                       </div>`,
+                                className: '',
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 16]
+                              })}
+                            >
+                              <Popup>Punto de Entrega: {pedido.descripcion}</Popup>
+                            </Marker>
+                          )}
+                          {pedido.ubicacion_recogida && pedido.ubicacion_entrega && 
+                           isValidCoord(pedido.ubicacion_recogida.lat, pedido.ubicacion_recogida.lng) && 
+                           isValidCoord(pedido.ubicacion_entrega.lat, pedido.ubicacion_entrega.lng) && (
+                            <Polyline 
+                              positions={[
+                                [Number(pedido.ubicacion_recogida.lat), Number(pedido.ubicacion_recogida.lng)],
+                                [Number(pedido.ubicacion_entrega.lat), Number(pedido.ubicacion_entrega.lng)]
+                              ]} 
+                              color="#f97316"
+                              dashArray="10, 10"
+                            />
+                          )}
+                        </React.Fragment>
+                      ))}
+                      <MapRecenter coords={currentCoords} />
+                    </MapContainer>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 font-bold bg-white p-6">
+                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <MapPin className="text-gray-300" size={32} />
+                      </div>
+                      <p className="text-center">Por favor, asegúrate de tener el GPS activado para ver el mapa de la ruta.</p>
+                    </div>
+                  )}
+                </div>
               </motion.div>
-            ) : (
-              misPedidos.filter(p => p.estado !== 'entregado').map((pedido) => (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  key={pedido.id} 
-                  className="bg-white p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-orange-50 space-y-6 relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 opacity-50" />
-                  
-                  <div className="flex justify-between items-start relative z-10">
-                    <div>
-                      <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                        {pedido.estado}
-                      </span>
-                      <h3 className="text-xl font-black text-gray-900 mt-3 capitalize">{pedido.tipo}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <User size={14} className="text-orange-400" />
-                        <p className="text-gray-500 font-bold text-sm">Cliente: {pedido.cliente_nombre || 'Usuario'} {pedido.cliente_telefono && `(${pedido.cliente_telefono})`}</p>
-                      </div>
-                      <p className="text-gray-500 font-medium mt-2">{pedido.descripcion}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Pedido ID</p>
-                      <p className="text-xs font-bold text-gray-400">#{pedido.id.substring(0, 8)}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 border-y border-gray-50 relative z-10">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-[10px] font-black text-gray-300 uppercase tracking-widest">
-                        <MapPin size={12} /> Recoger en
-                      </div>
-                      <p className="text-sm font-bold text-gray-700">{pedido.ubicacion_recogida?.direccion || 'No especificada'}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-[10px] font-black text-orange-300 uppercase tracking-widest">
-                        <Navigation size={12} /> Entregar en
-                      </div>
-                      <p className="text-sm font-bold text-gray-700">{pedido.ubicacion_entrega?.direccion || 'No especificada'}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 relative z-10">
-                    {pedido.estado === 'asignado' && !pedido.aceptado_por_motorizado && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleAceptarPedido(pedido.id)}
-                        disabled={loading === pedido.id}
-                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-200"
-                      >
-                        {loading === pedido.id ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={20} /> Aceptar Pedido</>}
-                      </motion.button>
-                    )}
-                    {pedido.estado === 'asignado' && pedido.aceptado_por_motorizado && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleActualizarEstado(pedido.id, 'en_camino')}
-                        disabled={loading === pedido.id}
-                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-orange-200"
-                      >
-                        {loading === pedido.id ? <Loader2 className="animate-spin" /> : <><Bike size={20} /> Iniciar Entrega</>}
-                      </motion.button>
-                    )}
-                    {pedido.estado === 'en_camino' && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleActualizarEstado(pedido.id, 'entregado')}
-                        disabled={loading === pedido.id}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-green-200"
-                      >
-                        {loading === pedido.id ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={20} /> Confirmar Entrega</>}
-                      </motion.button>
-                    )}
-                  </div>
-                </motion.div>
-              ))
             )}
           </AnimatePresence>
         </div>
-      </div>
-        </>
       )}
+
+      {/* Pedidos Disponibles Section */}
+      {activeTab === 'disponibles' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3 uppercase tracking-tight">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Package className="text-blue-600" size={20} />
+              </div>
+              Pedidos Disponibles
+            </h2>
+            <span className="bg-blue-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+              {disponibles.length} Nuevos
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            <AnimatePresence mode="popLayout">
+              {disponibles.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-16 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100"
+                >
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Package className="text-gray-200" size={32} />
+                  </div>
+                  <p className="text-gray-400 font-bold">No hay pedidos disponibles por ahora</p>
+                </motion.div>
+              ) : (
+                disponibles.map((pedido) => (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    key={`disp-${pedido.id}`} 
+                    className="bg-white p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-blue-50 space-y-6 relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50" />
+                    
+                    <div className="flex justify-between items-start relative z-10">
+                      <div>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                          Nuevo Pedido
+                        </span>
+                        <h3 className="text-xl font-black text-gray-900 mt-3 capitalize">{pedido.tipo}</h3>
+                        <p className="text-gray-500 font-medium mt-2">{pedido.descripcion}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Pedido ID</p>
+                        <p className="text-xs font-bold text-gray-400">#{pedido.id.substring(0, 8)}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 border-y border-gray-50 relative z-10">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                          <MapPin size={12} /> Recoger en
+                        </div>
+                        <p className="text-sm font-bold text-gray-700">{pedido.ubicacion_recogida?.direccion || 'No especificada'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-[10px] font-black text-orange-300 uppercase tracking-widest">
+                          <Navigation size={12} /> Entregar en
+                        </div>
+                        <p className="text-sm font-bold text-gray-700">{pedido.ubicacion_entrega?.direccion || 'No especificada'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 relative z-10">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleTomarPedido(pedido.id)}
+                        disabled={loading === pedido.id}
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-200"
+                      >
+                        {loading === pedido.id ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={20} /> Tomar Pedido</>}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+
 
     </div>
   );

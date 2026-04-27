@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'motorizado' | 'cliente';
+export type UserRole = 'admin' | 'motorizado' | 'cliente' | 'aliado';
 
 export interface Usuario {
   uid: string;
@@ -79,4 +79,5 @@ export interface Aliado {
   imagenes?: string[];
   productos?: Producto[];
   timestamp: any;
+  ownerEmail?: string;
 }

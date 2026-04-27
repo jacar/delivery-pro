@@ -20,6 +20,7 @@ const ClienteView = lazy(() => import('./components/ClienteView'));
 const RepartidorView = lazy(() => import('./components/RepartidorView'));
 const AdminView = lazy(() => import('./components/AdminView'));
 const HomeInformativo = lazy(() => import('./components/HomeInformativo'));
+const AliadoView = lazy(() => import('./components/AliadoView'));
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center py-20">
@@ -68,11 +69,7 @@ export default function App() {
     setShowLegal(true);
   };
 
-  useEffect(() => {
-    if (userData && activeMobileTab === 'home') {
-      setActiveMobileTab('pedidos');
-    }
-  }, [userData, activeMobileTab]);
+
 
   // Polling para notificaciones no leídas
   useEffect(() => {
@@ -266,6 +263,7 @@ export default function App() {
                 
                 if (userData?.rol === 'admin') return <AdminView activeTab={activeMobileTab} />;
                 if (userData?.rol === 'motorizado') return <RepartidorView userData={userData} activeTab={activeMobileTab} />;
+                if (userData?.rol === 'aliado') return <AliadoView />;
                 if (userData?.rol === 'cliente') return <ClienteView userData={userData} activeTab={activeMobileTab} />;
                 
                 return null;
