@@ -184,10 +184,18 @@ export default function HomeInformativo({ onStart }: HomeInformativoProps) {
         { lat: 0, lng: 0, direccion: direccion }
       );
       toast.success("¡Envío Express coordinado!");
-      const pedidoTexto = prods.map(item => `- *${item.cantidad}* ${item.producto.nombre}`).join('%0A');
-      const message = encodeURIComponent(`¡Hola ${selectedAliado.nombre}! Soy ${effectiveUser.nombre}. %0AMe gustaría pedir:%0A${pedidoTexto}%0A%0A*Dirección de entrega:* ${direccion}%0A%0A---%0A🛵 *YA COORDINÉ EL DELIVERY CON ENVÍOS EXPRESS*.`);
+      const pedidoTexto = prods.map(item => `- ${item.cantidad} ${item.producto.nombre}`).join('\n');
+      const messageText = `Hola ${selectedAliado.nombre}, soy ${effectiveUser.nombre}.
+Me gustaria pedir:
+${pedidoTexto}
+
+Direccion de entrega: ${direccion}
+
+YA COORDINÉ EL DELIVERY CON ENVÍOS EXPRESS.`;
+
+      const encodedMsg = encodeURIComponent(messageText);
       setTimeout(() => {
-        window.open(`https://wa.me/${selectedAliado.whatsapp}?text=${message}`, '_blank');
+        window.open(`https://wa.me/${selectedAliado.whatsapp}?text=${encodedMsg}`, '_blank');
         handleClose();
       }, 1500);
     } catch (error: any) {

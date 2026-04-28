@@ -345,13 +345,49 @@ export default function AliadosAdmin() {
                     <p className="text-[10px] font-bold text-gray-400 truncate tracking-widest">{u.email}</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => handleAprobarAliado(u.uid, u.email || '')}
-                  className="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 hover:scale-110 transition-all shadow-lg shadow-orange-200 shrink-0"
-                  title="Aprobar y Activar Aliado"
-                >
-                  <Check size={20} />
-                </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleAprobarAliado(u.uid, u.email || '')}
+                      className="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 hover:scale-110 transition-all shadow-lg shadow-orange-200 shrink-0"
+                      title="Aprobar y Activar Aliado"
+                    >
+                      <Check size={20} />
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        if(confirm(`¿Rechazar y eliminar permanentemente la solicitud de ${u.nombre}?`)) {
+                          try {
+                            // 1. Eliminar de tabla aliados si existe (Silencioso si falla)
+                            try {
+                              const a = aliados.find(al => al.ownerEmail === u.email);
+                              if(a) await eliminarAliado(a.id);
+                            } catch(e) { console.warn("Error eliminando aliado vinculado:", e); }
+                            
+                            // 2. Eliminar de tabla usuarios
+                            const res = await fetch(`${API_BASE_URL}/users/${u.uid}`, { 
+                              method: 'DELETE',
+                              headers: { 'Accept': 'application/json' }
+                            });
+                            
+                            if (!res.ok) {
+                              const errData = await res.json();
+                              throw new Error(errData.error || 'Error del servidor al eliminar usuario');
+                            }
+                            
+                            toast.success('Solicitud eliminada por completo');
+                            window.location.reload(); 
+                          } catch(e: any) {
+                            console.error("Error detallado al eliminar solicitud:", e);
+                            toast.error(`Error: ${e.message || 'No se pudo eliminar'}`);
+                          }
+                        }
+                      }}
+                      className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm shrink-0"
+                      title="Rechazar y Borrar Todo"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
               </div>
             ))}
           </div>
@@ -617,11 +653,11 @@ export default function AliadosAdmin() {
         </form>
       </div>
 
-      {/* Lista de aliados ACTIVOS */}
+      {/* Lista de aliados */}
       <div className="space-y-6">
-        <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Comercios Activos</h3>
+        <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Directorio de Aliados</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {aliados.filter(a => a.aprobado).map((aliado) => (
+          {aliados.map((aliado) => (
           <div key={aliado.id} className="bg-white p-6 rounded-[3rem] border border-gray-50 shadow-xl shadow-gray-500/5 group">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-gray-50 rounded-[2rem] overflow-hidden shadow-inner shrink-0 leading-[0]">

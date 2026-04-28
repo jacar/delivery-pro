@@ -167,6 +167,26 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
     return acc + (isNaN(num) ? 0 : num * item.cantidad);
   }, 0);
 
+  const sendWhatsApp = (tipo: string, desc: string, recogida: string, entrega: string) => {
+    const phone = "584220060712";
+    const text = `Hola, me gustaria realizar un pedido.
+
+DETALLES DEL PEDIDO:
+Tipo: ${tipo.toUpperCase()}
+Descripcion: ${desc}
+
+DATOS DE ENTREGA:
+Cliente: ${userData.nombre}
+Telefono: ${userData.telefono || 'No especificado'}
+Punto de Recogida: ${recogida}
+Punto de Entrega: ${entrega}
+
+Gracias, espero su confirmacion.`;
+    
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+  };
+
   const handleConfirmCartOrder = async () => {
     if (cart.length === 0 || !selectedAliado) return;
     setLoading(true);
@@ -174,7 +194,7 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
       const deliveryFee = Number(tarifasGenerales.compra?.precio || 0);
       const totalConDelivery = cartTotal + deliveryFee;
 
-      const desc = `PEDIDO ${selectedAliado.nombre.toUpperCase()}: ${cart.map(i => `${i.cantidad}x ${i.producto.nombre}`).join(', ')} | Subtotal: $${cartTotal.toFixed(2)} + Delivery: $${deliveryFee.toFixed(2)} | TOTAL: $${totalConDelivery.toFixed(2)}`;
+      const desc = `Tienda: ${selectedAliado.nombre.toUpperCase()} - Productos: ${cart.map(i => `${i.cantidad}x ${i.producto.nombre}`).join(', ')} - Subtotal: $${cartTotal.toFixed(2)} - Delivery: $${deliveryFee.toFixed(2)} - TOTAL: $${totalConDelivery.toFixed(2)}`;
       
       const rawRecogidaDir = selectedAliado.direccion || `Local de ${selectedAliado.nombre}`;
       const ubicacionRecogida = {
@@ -191,6 +211,10 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
       };
 
       await createPedido(userData.uid, userData.nombre, userData.telefono || '', 'compra', desc, ubicacionRecogida, ubicacionEntrega);
+      
+      // WhatsApp Redirect
+      sendWhatsApp('compra', desc, rawRecogidaDir, ubicacionEntrega.direccion);
+
       toast.success('¡Pedido de tienda realizado con éxito!');
       setIsMenuModalOpen(false);
       setCart([]);
@@ -244,6 +268,10 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
       };
       
       await createPedido(userData.uid, userData.nombre, userData.telefono || '', tipo, cleanDesc, ubicacionRecogida, ubicacionEntrega);
+      
+      // WhatsApp Redirect
+      sendWhatsApp(tipo, cleanDesc, cleanRecogida, cleanEntrega);
+
       toast.success('¡Pedido creado con éxito!');
       setDescripcion('');
       setRecogida('');

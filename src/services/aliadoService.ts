@@ -1,58 +1,44 @@
 import { Producto, Aliado } from '../types';
 import { API_BASE_URL } from './apiConfig';
 
-let refreshTrigger: () => void = () => {};
+const listeners: (() => void)[] = [];
+
+export const triggerRefreshAliados = () => {
+  localStorage.removeItem('aliados_cache'); // Limpiar caché al haber cambios
+  listeners.forEach(l => l());
+};
 
 export const listenAliados = (callback: (aliados: Aliado[]) => void) => {
-  const fetchLocal = async () => {
+  const fetchAliados = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/allies`);
-      if (!response.ok) {
-        const text = await response.text();
-        console.error(`Error ${response.status} fetching allies:`, text);
-        throw new Error('Error fetching allies');
-      }
-      const dataText = await response.text();
-      try {
-        const data = JSON.parse(dataText);
-        const mappedData = data.map((item: any) => {
-          let parsedImagenes = [];
-          let parsedProductos = [];
-
-          try {
-            if (item.imagenes) parsedImagenes = typeof item.imagenes === 'string' ? JSON.parse(item.imagenes) : item.imagenes;
-          } catch(e) {}
-
-          try {
-            if (item.productos) parsedProductos = typeof item.productos === 'string' ? JSON.parse(item.productos) : item.productos;
-          } catch(e) {}
-
-          return {
-            ...item,
-            imagenes: parsedImagenes,
-            productos: parsedProductos,
-            aprobado: !!item.aprobado
-          };
-        });
-        callback(mappedData);
-      } catch (e) {
-        console.error("Error al parsear JSON de aliados:", e, "Contenido recibido:", dataText);
-        callback([]);
+      const response = await fetch(`${API_BASE_URL}/allies?t=${Date.now()}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Mapear el campo imagenes y productos que vienen como string JSON
+        const mapped = data.map((a: any) => ({
+          ...a,
+          aprobado: Boolean(Number(a.aprobado)), // Asegurar que sea boolean
+          imagenes: typeof a.imagenes === 'string' ? JSON.parse(a.imagenes || '[]') : (a.imagenes || []),
+          productos: typeof a.productos === 'string' ? JSON.parse(a.productos || '[]') : (a.productos || [])
+        }));
+        callback(mapped);
       }
     } catch (e) {
-      console.error("Error al escuchar aliados (Red/API):", e);
-      callback([]);
+      console.error("Error fetching allies:", e);
     }
   };
 
-  refreshTrigger = fetchLocal;
-  fetchLocal();
-  const interval = setInterval(fetchLocal, 10000); // Polling cada 10s para agilidad
-  return () => clearInterval(interval);
-};
+  fetchAliados();
+  const interval = setInterval(fetchAliados, 15000); // Poll cada 15 seg
+  
+  // Registrar listener para refresco inmediato
+  listeners.push(fetchAliados);
 
-export const triggerRefreshAliados = () => {
-  refreshTrigger();
+  return () => {
+    clearInterval(interval);
+    const idx = listeners.indexOf(fetchAliados);
+    if (idx > -1) listeners.splice(idx, 1);
+  };
 };
 
 export const crearAliado = async (data: Partial<Aliado> & { id: string, ownerEmail: string }): Promise<void> => {
