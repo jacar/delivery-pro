@@ -93,9 +93,17 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
     // Cargar tarifas de moto taxi
     getTarifasMotoTaxi().then(data => setTarifas(data.filter(t => t.activo)));
 
-    // Cargar aliados
+    // Cargar aliados con caché inicial
+    const cachedAliados = localStorage.getItem('aliados_cache');
+    if (cachedAliados) {
+      try {
+        setAliados(JSON.parse(cachedAliados));
+      } catch (e) {}
+    }
+
     const unsubscribeAliados = listenAliados((data) => {
       setAliados(data);
+      localStorage.setItem('aliados_cache', JSON.stringify(data));
     });
 
     // Cargar carrito pendiente
@@ -604,7 +612,7 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                 </div>
               ) : (
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                  {aliados.map((aliado) => (
+                  {aliados.filter(a => a.aprobado).map((aliado) => (
                     <motion.div 
                       key={aliado.id} 
                       whileHover={{ y: -8, scale: 1.02 }} 
@@ -874,12 +882,15 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                             {producto.descripcion || 'Producto de alta calidad seleccionado para ti.'}
                           </p>
                           <div className="flex items-center justify-between">
-                                                         <span className="text-xl font-black text-orange-600">$ {(() => {
-                               const val = String(producto.precio || '0').replace(/[^0-9.]/g, '');
-                               const num = parseFloat(val);
-                               return isNaN(num) ? '0.00' : num.toFixed(2);
-                             })()}</span>
-
+                            <span className="text-xl font-black text-orange-600">
+                              {(() => {
+                                const p = String(producto.precio);
+                                if (p.includes('$')) return p;
+                                const n = parseFloat(p.replace(/[^0-9.]/g, ''));
+                                if (isNaN(n)) return p; // Show raw if not a number
+                                return `$ ${n.toFixed(2)}`;
+                              })()}
+                            </span>
                             
                             <div className="flex items-center gap-3">
                               {getCartItemQuantity(producto.id) > 0 ? (
@@ -925,13 +936,22 @@ export default function ClienteView({ userData, activeTab: propActiveTab }: Clie
                   className="p-8 bg-white border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6"
                 >
                   <div className="flex flex-wrap items-center gap-6">
-                    <div className="w-14 h-14 bg-orange-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-100">
-                      <ShoppingCart size={24} />
+                    <div className="flex -space-x-4 overflow-hidden">
+                      {cart.slice(0, 5).map((item, i) => (
+                        <div key={i} className="w-12 h-12 rounded-xl border-4 border-white overflow-hidden bg-gray-100 shadow-sm relative z-[i]">
+                          <img src={formatImageUrl(item.producto.imagenUrl || '')} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                      {cart.length > 5 && (
+                        <div className="w-12 h-12 rounded-xl border-4 border-white overflow-hidden bg-orange-100 flex items-center justify-center text-[10px] font-black text-orange-600 relative z-10">
+                          +{cart.length - 5}
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-8">
                       <div>
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Productos</p>
-                        <h4 className="text-xl font-black text-gray-900">$ {Number(cartTotal).toFixed(2)}</h4>
+                        <p className="text-sm font-black text-orange-500 mt-1">{String(cartTotal).includes('$') ? cartTotal : `$ ${Number(cartTotal).toFixed(2)}`}</p>
                       </div>
                       <div className="text-orange-500">
                         <p className="text-[10px] font-black opacity-60 uppercase tracking-widest">Delivery</p>

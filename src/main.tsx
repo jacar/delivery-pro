@@ -5,13 +5,7 @@ import './index.css';
 import { AuthProvider } from './context/AuthContext';
 
 // Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`)
-      .then(reg => console.log('SW registered:', reg))
-      .catch(err => console.error('SW registration failed:', err));
-  });
-}
+// Service worker registration removed to prevent persistent caching interference
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

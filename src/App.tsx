@@ -259,11 +259,11 @@ export default function App() {
               transition={{ duration: 0.3 }}
             >
               {(() => {
+                if (userData?.rol === 'aliado') return <AliadoView />;
                 if (activeMobileTab === 'home' && userData?.rol === 'cliente') return <HomeInformativo onStart={() => setActiveMobileTab('pedidos')} />;
                 
                 if (userData?.rol === 'admin') return <AdminView activeTab={activeMobileTab} />;
                 if (userData?.rol === 'motorizado') return <RepartidorView userData={userData} activeTab={activeMobileTab} />;
-                if (userData?.rol === 'aliado') return <AliadoView />;
                 if (userData?.rol === 'cliente') return <ClienteView userData={userData} activeTab={activeMobileTab} />;
                 
                 return null;

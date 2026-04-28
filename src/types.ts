@@ -14,6 +14,7 @@ export interface Usuario {
   fotoUrl?: string;
   disponible?: boolean;
   ocupado?: boolean;
+  aprobado?: boolean;
 }
 
 export type PedidoEstado = 'disponible' | 'asignado' | 'en_camino' | 'entregado';

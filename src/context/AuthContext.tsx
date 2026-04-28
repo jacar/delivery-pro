@@ -11,7 +11,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const SESSION_KEY = 'delivery_user_v2'; // v2 limpia sesiones viejas de Firebase
+const SESSION_KEY = 'delivery_user_v3'; // v3 forzar limpieza de sesiones corruptas
 
 // Normaliza el objeto del backend para que siempre tenga uid y rol correctos
 const normalizeUser = (raw: any): Usuario => ({

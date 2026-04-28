@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
     
     <!-- SEO BÁSICO -->
     <title>DeliveryExpress | Tu Logística Urbana de Confianza en Mene Grande</title>
@@ -30,6 +31,7 @@
     
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#f97316" />
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DeliveryExpress">
@@ -37,9 +39,20 @@
     <link rel="icon" type="image/png" href="icono_pwa.png" />
 
     <script>
+      // KILL SERVICE WORKER AND CLEAN STUCK STATE
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('SW Unregistered');
+          }
+        });
+      }
+      
+      // Limpiar caches de la API de cache del navegador
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          for (let name of names) caches.delete(name);
         });
       }
     </script>

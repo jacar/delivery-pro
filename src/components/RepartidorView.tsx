@@ -20,11 +20,11 @@ import L from 'leaflet';
 
 // Fix for default marker icons in Leaflet
 import 'leaflet/dist/leaflet.css';
-const DefaultIcon = L.icon({
-  iconUrl: `${import.meta.env.BASE_URL}icono_mapa.svg`,
-  iconSize: [35, 35],
-  iconAnchor: [17, 35],
-  popupAnchor: [0, -35]
+const DefaultIcon = L.divIcon({
+  html: `<div style="width: 24px; height: 24px; background-color: #f97316; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>`,
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
@@ -134,8 +134,8 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
           }
           
           if (activePedido) {
-            // Actualización al servidor cada 30 segundos para ahorrar batería y datos
-            const SERVER_UPDATE_INTERVAL = 30000; 
+            // Actualización al servidor cada 2 minutos para ahorrar batería y datos
+            const SERVER_UPDATE_INTERVAL = 120000; 
             if (now - (lastUpdateServer || 0) > SERVER_UPDATE_INTERVAL) {
               actualizarUbicacionRepartidor(activePedido.id, latitude, longitude);
               lastUpdateServer = now;
@@ -261,23 +261,23 @@ export default function RepartidorView({ userData, activeTab: propActiveTab }: R
             </div>
             <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
           </div>
-          <div>
-            <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+          <div className="flex flex-col flex-1 min-w-0">
+            <h2 className="text-xl md:text-2xl font-black text-gray-900 truncate">
               {userData.nombre}
-              {(() => {
-                const estaOcupado = misPedidos.some(p => p.estado === 'asignado' || p.estado === 'en_camino');
-                return (
-                  <>
-                    <span className={`w-3 h-3 rounded-full ${isOnline ? (estaOcupado ? 'bg-orange-500' : 'bg-green-500 animate-pulse') : 'bg-gray-300'}`} />
-                    <p className="text-gray-500 font-medium uppercase tracking-widest text-[10px] ml-2">
-                      {isOnline 
-                        ? (estaOcupado ? 'Ocupado con un pedido' : 'Disponible para pedidos') 
-                        : 'No disponible'}
-                    </p>
-                  </>
-                );
-              })()}
             </h2>
+            {(() => {
+              const estaOcupado = misPedidos.some(p => p.estado === 'asignado' || p.estado === 'en_camino');
+              return (
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isOnline ? (estaOcupado ? 'bg-orange-500' : 'bg-green-500 animate-pulse') : 'bg-gray-300'}`} />
+                  <p className="text-gray-500 font-bold uppercase tracking-widest text-[9px] md:text-[10px]">
+                    {isOnline 
+                      ? (estaOcupado ? 'Ocupado con un pedido' : 'Disponible para pedidos') 
+                      : 'No disponible'}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
         </div>
 

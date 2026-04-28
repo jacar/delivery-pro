@@ -10,14 +10,12 @@ import icon from 'leaflet/dist/images/marker-icon.png';
 // @ts-ignore
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-let DefaultIcon = L.icon({
-    iconUrl: `${import.meta.env.BASE_URL}icono_mapa.svg`,
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
+let DefaultIcon = L.divIcon({
+  html: `<div style="width: 24px; height: 24px; background-color: #f97316; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>`,
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
 });
-
-L.Marker.prototype.options.icon = DefaultIcon;
 
 // Custom icon for the driver (motorizado)
 const getDriverIcon = (vehicleType?: string) => {

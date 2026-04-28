@@ -30,7 +30,8 @@ export const listenAliados = (callback: (aliados: Aliado[]) => void) => {
           return {
             ...item,
             imagenes: parsedImagenes,
-            productos: parsedProductos
+            productos: parsedProductos,
+            aprobado: !!item.aprobado
           };
         });
         callback(mappedData);
@@ -46,7 +47,7 @@ export const listenAliados = (callback: (aliados: Aliado[]) => void) => {
 
   refreshTrigger = fetchLocal;
   fetchLocal();
-  const interval = setInterval(fetchLocal, 60000); // Reducido a 60s
+  const interval = setInterval(fetchLocal, 10000); // Polling cada 10s para agilidad
   return () => clearInterval(interval);
 };
 
@@ -54,27 +55,15 @@ export const triggerRefreshAliados = () => {
   refreshTrigger();
 };
 
-export const crearAliado = async (
-  id: string,
-  nombre: string, 
-  logoUrl: string, 
-  descripcion: string = '', 
-  whatsapp: string = '',
-  imagenes: string[] = [],
-  productos: Producto[] = []
-): Promise<void> => {
+export const crearAliado = async (data: Partial<Aliado> & { id: string, ownerEmail: string }): Promise<void> => {
+  const transformedData: any = { ...data };
+  if (data.imagenes) transformedData.imagenes = JSON.stringify(data.imagenes);
+  if (data.productos) transformedData.productos = JSON.stringify(data.productos);
+
   const response = await fetch(`${API_BASE_URL}/allies`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id,
-      nombre,
-      logoUrl,
-      descripcion,
-      whatsapp,
-      imagenes: JSON.stringify(imagenes),
-      productos: JSON.stringify(productos)
-    })
+    body: JSON.stringify(transformedData)
   });
   
   if (!response.ok) {
@@ -123,8 +112,18 @@ export const eliminarAliado = async (id: string) => {
 
 export const subirImagen = async (path: string, file: File | Blob): Promise<string> => {
   try {
+    // Comprimir antes de subir si es un archivo de imagen
+    let fileToUpload = file;
+    if (file instanceof File && file.type.startsWith('image/')) {
+      try {
+        fileToUpload = await compressImage(file);
+      } catch (e) {
+        console.warn("No se pudo comprimir la imagen, subiendo original:", e);
+      }
+    }
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fileToUpload);
 
     const response = await fetch(`${API_BASE_URL}/upload`, {
       method: 'POST',
@@ -140,3 +139,43 @@ export const subirImagen = async (path: string, file: File | Blob): Promise<stri
   }
 };
 
+const compressImage = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 800; // Máximo 800px para web
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas to Blob failed'));
+        }, 'image/jpeg', 0.7); // 70% calidad
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+};

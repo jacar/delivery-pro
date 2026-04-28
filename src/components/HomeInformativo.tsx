@@ -767,20 +767,13 @@ Estado: SOLICITUD DE ALTA`;
         </div>
       </section>
 
-      {/* FOOTER - FONDO CON VIDEO CINEMÁTICO */}
+      {/* FOOTER - OPTIMIZADO */}
       <footer id="contacto" className="relative py-24 overflow-hidden min-h-[400px] lg:min-h-[500px] flex items-center bg-zinc-950">
-        {/* VIDEO DE FONDO */}
-        <video 
-          autoPlay 
-          loop 
-          muted 
-          playsInline 
-          poster={`${import.meta.env.BASE_URL}banners/bg-7.webp`}
-          className="absolute inset-0 w-full h-full object-cover opacity-60 z-0"
-          preload="metadata"
-        >
-          <source src={`${import.meta.env.BASE_URL}banners/hero-video.webm`} type="video/webm" />
-        </video>
+        {/* FONDO DE IMAGEN OPTIMIZADO */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-60 z-0" 
+          style={{ backgroundImage: `url(${import.meta.env.BASE_URL}banners/bg-7.webp)` }}
+        />
 
         {/* OVERLAY DE COLOR (TINTE NARANJA) */}
         <div className="absolute inset-0 bg-orange-600/40 backdrop-blur-[2px] z-10" />

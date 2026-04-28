@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { listenAliados, crearAliado, eliminarAliado, actualizarAliado, subirImagen } from '../services/aliadoService';
-import { listenUsuarios, actualizarRolUsuario } from '../services/pedidoService';
-import { Aliado, Producto, Usuario } from '../types';
-import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package, Pencil, Edit2, UserPlus } from 'lucide-react';
+import { Store, ImagePlus, Trash2, Loader2, Plus, Phone, Package, Pencil, Edit2, UserPlus, Check, X, ShieldCheck } from 'lucide-react';
+import { listenUsuarios, actualizarRolUsuario, aprobarUsuario } from '../services/pedidoService';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 import { formatImageUrl } from '../services/apiConfig';
@@ -220,9 +219,16 @@ export default function AliadosAdmin() {
         toast.success('Aliado actualizado correctamente');
       } else {
         const newId = `aliado_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-        await crearAliado(newId, nombre, finalLogoUrl, descripcion, whatsapp, finalGalleryUrls, finalProductos);
-        // Then update the created to have ownerEmail since crearAliado might not take it initially, or we need to update it
-        await actualizarAliado(newId, { ownerEmail: nuevoAliadoOwnerEmail });
+        await crearAliado({
+          id: newId,
+          nombre,
+          logoUrl: finalLogoUrl,
+          descripcion,
+          whatsapp,
+          imagenes: finalGalleryUrls,
+          productos: finalProductos,
+          ownerEmail: nuevoAliadoOwnerEmail
+        });
         toast.success('Aliado creado correctamente');
       }
       resetForm();
@@ -286,6 +292,24 @@ export default function AliadosAdmin() {
     }
   };
 
+  const handleAprobarAliado = async (userId: string, email: string) => {
+    try {
+      // 1. Aprobar en tabla usuarios
+      await aprobarUsuario(userId, true);
+      
+      // 2. Aprobar en tabla aliados
+      const aliadoToApprove = aliados.find(a => a.ownerEmail === email);
+      if (aliadoToApprove) {
+        await actualizarAliado(aliadoToApprove.id, { aprobado: true });
+      }
+      
+      toast.success('Aliado aprobado exitosamente en todas las tablas');
+    } catch (e) {
+      console.error(e);
+      toast.error('Error al aprobar aliado');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center p-12">
@@ -296,6 +320,44 @@ export default function AliadosAdmin() {
 
   return (
     <div className="space-y-8">
+      {/* SECCIÓN DE SOLICITUDES PENDIENTES - AHORA AL PRINCIPIO */}
+      {usuarios.filter(u => u.rol === 'aliado' && !u.aprobado).length > 0 && (
+        <div className="bg-orange-500/5 border-2 border-orange-100 rounded-[2.5rem] p-8 shadow-xl shadow-orange-100/20">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="bg-orange-500 p-4 rounded-3xl text-white shadow-lg shadow-orange-200">
+              <ShieldCheck size={28} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Nuevas Solicitudes de Aliados</h3>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Haz clic en el check para activar el comercio de inmediato</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {usuarios.filter(u => u.rol === 'aliado' && !u.aprobado).map((u) => (
+              <div key={u.uid} className="bg-white p-6 rounded-[2rem] shadow-sm border border-orange-100 flex items-center justify-between group transition-all hover:shadow-xl hover:border-orange-300">
+                <div className="flex items-center gap-4 overflow-hidden">
+                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center shrink-0 border border-gray-100 overflow-hidden shadow-inner">
+                    {u.fotoUrl ? <img src={u.fotoUrl} className="w-full h-full object-cover" /> : <Store className="text-gray-300" size={24} />}
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-base font-black text-gray-900 truncate uppercase tracking-tight">{u.nombre}</p>
+                    <p className="text-[10px] font-bold text-gray-400 truncate tracking-widest">{u.email}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => handleAprobarAliado(u.uid, u.email || '')}
+                  className="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 hover:scale-110 transition-all shadow-lg shadow-orange-200 shrink-0"
+                  title="Aprobar y Activar Aliado"
+                >
+                  <Check size={20} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Formulario de registro/edición */}
       <div className="bg-white p-8 rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.05)] border border-gray-50">
         <div className="flex justify-between items-center mb-8">
@@ -314,7 +376,8 @@ export default function AliadosAdmin() {
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Lado Izquierdo: Textos */}
             <div className="space-y-6">
               <div className="space-y-2">
@@ -476,11 +539,11 @@ export default function AliadosAdmin() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Precio ($)</label>
+                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Precio o Variantes</label>
                     <input 
                       type="text" value={pPrecio} onChange={(e) => setPPrecio(e.target.value)}
                       className="w-full px-6 py-4 bg-white border-none rounded-2xl text-xs font-bold focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm" 
-                      placeholder="Ej: 12.99"
+                      placeholder="Ej: 12.99 o S: 5, L: 10"
                     />
                   </div>
                   <div className="space-y-2">
@@ -554,16 +617,23 @@ export default function AliadosAdmin() {
         </form>
       </div>
 
-      {/* Lista de aliados */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {aliados.map((aliado) => (
+      {/* Lista de aliados ACTIVOS */}
+      <div className="space-y-6">
+        <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Comercios Activos</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {aliados.filter(a => a.aprobado).map((aliado) => (
           <div key={aliado.id} className="bg-white p-6 rounded-[3rem] border border-gray-50 shadow-xl shadow-gray-500/5 group">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-gray-50 rounded-[2rem] overflow-hidden shadow-inner shrink-0 leading-[0]">
                 <img src={formatImageUrl(aliado.logoUrl)} alt={aliado.nombre} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-black text-gray-900 uppercase tracking-tighter truncate">{aliado.nombre}</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-black text-gray-900 uppercase tracking-tighter truncate">{aliado.nombre}</h4>
+                  {!aliado.aprobado && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-600 rounded text-[8px] font-black uppercase">Pendiente</span>
+                  )}
+                </div>
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 line-clamp-1 whitespace-pre-wrap">{aliado.descripcion || 'Sin categoría'}</p>
                 {aliado.whatsapp && (
                   <p className="text-[9px] font-bold text-green-600 mt-1 flex items-center gap-1">
@@ -597,6 +667,7 @@ export default function AliadosAdmin() {
             </div>
           </div>
         ))}
+        </div>
       </div>
     </div>
   );

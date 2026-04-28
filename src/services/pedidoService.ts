@@ -228,6 +228,13 @@ export const actualizarRolUsuario = async (userId: string, nuevoRol: UserRole) =
   });
 };
 
+export const aprobarUsuario = async (userId: string, aprobado: boolean = true) => {
+  return await apiFetch(`/users/${userId}`, {
+    method: 'PUT',
+    body: { aprobado }
+  });
+};
+
 export const deleteUsuario = async (userId: string) => {
   return await apiFetch(`/users/${userId}`, {
     method: 'DELETE'

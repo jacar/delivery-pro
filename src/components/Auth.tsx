@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Mail, Lock, User, Loader2, ArrowRight, ShieldCheck, Bike, ShoppingBag, ArrowLeft, Info } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Mail, Lock, User, Loader2, ArrowRight, ShieldCheck, Bike, ShoppingBag, ArrowLeft, Info, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import LegalModal from './LegalModal';
@@ -20,46 +20,58 @@ declare global {
 
 export default function Auth({ onBack }: AuthProps) {
   const { login } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const googleInitialized = useRef(false);
+  const [mode, setMode] = useState<'login' | 'register' | 'staff' | 'aliado' | 'aliado_register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isStaffLogin, setIsStaffLogin] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [legalTab, setLegalTab] = useState<'about' | 'terms' | 'privacy' | 'returns'>('about');
 
   useEffect(() => {
-    // Configurar Google Identity Services
-    const initializeGoogle = () => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: "1091184859542-08v05fjt73llrkjcrb9ord7van58rkuk.apps.googleusercontent.com",
-          callback: handleGoogleResponse
-        });
-
-        window.google.accounts.id.renderButton(
-          document.getElementById("googleBtn"),
-          { theme: "outline", size: "large", width: 320 }
-        );
-      }
-    };
-
-    const script = document.createElement('script');
-    script.src = "https://accounts.google.com/gsi/client";
-    script.onload = initializeGoogle;
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
+    // 1. CARGAR SCRIPT UNA SOLA VEZ
+    if (!document.getElementById('google-gsi-client')) {
+      const script = document.createElement('script');
+      script.id = 'google-gsi-client';
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
   }, []);
+
+  useEffect(() => {
+    // 2. INICIALIZAR Y RENDERIZAR BOTÓN
+    const timer = setTimeout(() => {
+      if (window.google?.accounts?.id) {
+        if (!googleInitialized.current) {
+          window.google.accounts.id.initialize({
+            client_id: "1091184859542-08v05fjt73llrkjcrb9ord7van58rkuk.apps.googleusercontent.com",
+            callback: handleGoogleResponse
+          });
+          googleInitialized.current = true;
+        }
+
+        const btnElem = document.getElementById("googleBtn");
+        if (btnElem) {
+          btnElem.innerHTML = ""; // Limpiar antes de renderizar
+          window.google.accounts.id.renderButton(btnElem, { 
+            theme: "outline", 
+            size: "large", 
+            width: 320,
+            text: mode === 'aliado' ? 'signup_with' : 'signin_with'
+          });
+        }
+      }
+    }, 500); // Pequeño delay para asegurar que el DOM y el script estén listos
+
+    return () => clearTimeout(timer);
+  }, [mode]);
 
   const handleGoogleResponse = async (response: any) => {
     try {
       setLoading(true);
-      // Decodificar el JWT de Google de forma básica para obtener el email/nombre
       const base64Url = response.credential.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -67,8 +79,8 @@ export default function Auth({ onBack }: AuthProps) {
       }).join(''));
 
       const googleUser = JSON.parse(jsonPayload);
+      const targetRol = (mode === 'aliado' || mode === 'aliado_register') ? 'aliado' : 'cliente';
       
-      // Enviar a Laravel para sincronizar/login
       const res = await fetch(`${API_BASE_URL}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,26 +88,26 @@ export default function Auth({ onBack }: AuthProps) {
           email: googleUser.email,
           nombre: googleUser.name,
           google_id: googleUser.sub,
-          fotoUrl: googleUser.picture
+          fotoUrl: googleUser.picture,
+          rol: targetRol
         })
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        const msg = errorData.message || errorData.error || `Error ${res.status}: ${res.statusText}`;
-        console.error("Server Error Response (auth/google):", errorData);
-        throw new Error(msg);
+        throw new Error(data.error || data.message || 'Error en Google Auth');
       }
       
-      const userData = await res.json();
-      
-      login(userData);
-      toast.success(`¡Bienvenido, ${userData.nombre}!`);
-    } catch (error: any) {
-      console.error("Google Auth Error Detail:", error);
-      toast.error(`Error al iniciar sesión: ${error.message}`);
-    } finally {
+      login(data);
 
+      if (data.rol === 'aliado' && !data.aprobado) {
+        toast.info('Registro de aliado pendiente de aprobación (Modo Edición Habilitado).');
+      } else {
+        toast.success(`¡Bienvenido, ${data.nombre}!`);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
       setLoading(false);
     }
   };
@@ -105,10 +117,13 @@ export default function Auth({ onBack }: AuthProps) {
     setLoading(true);
 
     try {
-      const endpoint = isLogin || isStaffLogin ? '/login' : '/register';
-      const body = isLogin || isStaffLogin 
+      const isRegister = mode === 'register' || mode === 'aliado_register';
+      const endpoint = isRegister ? '/register' : '/login';
+      const targetRol = mode === 'aliado_register' ? 'aliado' : 'cliente';
+
+      const body = !isRegister
         ? { email, password }
-        : { email, password, nombre, rol: 'cliente' };
+        : { email, password, nombre, rol: targetRol };
 
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
@@ -119,11 +134,20 @@ export default function Auth({ onBack }: AuthProps) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Error en la autenticación');
+        throw new Error(data.error || data.message || 'Error en la autenticación');
+      }
+
+      // Si es login y estamos en modo Aliado, verificar que el rol coincida
+      if (!isRegister && (mode === 'aliado') && data.rol !== 'aliado') {
+        throw new Error('Esta cuenta no está registrada como Aliado Comercial.');
       }
 
       login(data as Usuario);
-      toast.success(isLogin ? '¡Hola de nuevo!' : 'Cuenta creada con éxito');
+      if (data.rol === 'aliado' && !data.aprobado) {
+        toast.info('Tu registro de aliado está pendiente de aprobación (Modo Edición Habilitado).');
+      } else {
+        toast.success(isRegister ? 'Cuenta creada con éxito' : '¡Hola de nuevo!');
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -152,24 +176,27 @@ export default function Auth({ onBack }: AuthProps) {
               <ArrowLeft size={20} />
             </button>
             <div className="bg-indigo-50 p-3 rounded-2xl">
-              {isStaffLogin ? <Bike className="text-indigo-600" size={24} /> : <ShoppingBag className="text-indigo-600" size={24} />}
+              {mode === 'staff' && <ShieldCheck className="text-indigo-600" size={24} />}
+              {(mode === 'aliado' || mode === 'aliado_register') && <Store className="text-indigo-600" size={24} />}
+              {(mode === 'login' || mode === 'register') && <ShoppingBag className="text-indigo-600" size={24} />}
             </div>
             <div className="w-10" />
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">
-              {isStaffLogin ? 'Acceso Staff' : isLogin ? '¡Bienvenido!' : 'Crear Cuenta'}
+            <h1 className="text-2xl font-bold text-slate-800 mb-2 uppercase tracking-tighter">
+              {mode === 'staff' ? 'Acceso Staff' : (mode === 'aliado' || mode === 'aliado_register') ? 'Acceso Aliados' : mode === 'login' ? '¡Bienvenido!' : 'Crear Cuenta'}
             </h1>
             <p className="text-slate-500 text-sm">
-              {isStaffLogin 
-                ? 'Ingresa tus credenciales de repartidor o admin' 
-                : isLogin ? 'Inicia sesión para continuar con tu pedido' : 'Únete a Delivery Express hoy'}
+              {mode === 'staff' && 'Ingresa tus credenciales de repartidor o admin'}
+              {(mode === 'aliado' || mode === 'aliado_register') && 'Gestiona tu comercio y productos'}
+              {mode === 'login' && 'Inicia sesión para continuar con tu pedido'}
+              {mode === 'register' && 'Únete a Delivery Express hoy'}
             </p>
           </div>
 
           <form onSubmit={handleEmailAuth} className="space-y-4">
-            {!isLogin && !isStaffLogin && (
+            {(mode === 'register' || mode === 'aliado_register') && (
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 <input
@@ -216,14 +243,14 @@ export default function Auth({ onBack }: AuthProps) {
                 <Loader2 className="animate-spin" size={20} />
               ) : (
                 <>
-                  {isLogin || isStaffLogin ? 'Entrar Ahora' : 'Empezar Registro'}
+                  {(mode === 'register' || mode === 'aliado_register') ? 'Crear Cuenta de Aliado' : 'Entrar al Panel'}
                   <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
           </form>
 
-          {!isStaffLogin && (
+          {mode !== 'staff' && (
             <>
               <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
@@ -233,30 +260,61 @@ export default function Auth({ onBack }: AuthProps) {
                   <span className="px-4 bg-white text-slate-400">O continúa con Google</span>
                 </div>
               </div>
-
               <div id="googleBtn" className="w-full flex justify-center min-h-[44px]"></div>
             </>
           )}
 
-          <div className="mt-8 text-center space-y-4">
-            <button
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setIsStaffLogin(false);
-              }}
-              className="text-indigo-600 font-medium hover:text-indigo-700 transition-colors"
-            >
-              {isLogin ? '¿No tienes cuenta? Registrate' : '¿Ya tienes cuenta? Inicia sesión'}
-            </button>
-
-            <div className="flex items-center justify-center gap-2">
+          <div className="mt-8 text-center space-y-6">
+            {(mode === 'login' || mode === 'register') ? (
               <button
-                onClick={() => setIsStaffLogin(!isStaffLogin)}
-                className="text-slate-400 text-sm hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                className="text-indigo-600 font-medium hover:text-indigo-700 transition-colors"
               >
-                <ShieldCheck size={14} />
-                {isStaffLogin ? 'Ir a Login Cliente' : 'Acceso Personal Autorizado'}
+                {mode === 'login' ? '¿No tienes cuenta? Registrate' : '¿Ya tienes cuenta? Inicia sesión'}
               </button>
+            ) : (mode === 'aliado' || mode === 'aliado_register') ? (
+              <button
+                onClick={() => setMode(mode === 'aliado' ? 'aliado_register' : 'aliado')}
+                className="text-indigo-600 font-medium hover:text-indigo-700 transition-colors"
+              >
+                {mode === 'aliado' ? '¿No tienes cuenta? Regístrate como Aliado' : '¿Ya tienes cuenta? Inicia sesión'}
+              </button>
+            ) : (
+              <button
+                onClick={() => setMode('login')}
+                className="text-indigo-600 font-medium hover:text-indigo-700 transition-colors flex items-center gap-2 mx-auto"
+              >
+                <ArrowLeft size={16} /> Volver al Login Cliente
+              </button>
+            )}
+
+            <div className="flex flex-col gap-3">
+              {(mode === 'login' || mode === 'register' || mode === 'staff') && (
+                <button
+                  onClick={() => setMode('aliado')}
+                  className="w-full py-3 border border-slate-200 rounded-2xl text-slate-500 text-sm hover:text-indigo-600 hover:border-indigo-100 flex items-center justify-center gap-2 transition-all hover:bg-indigo-50/50"
+                >
+                  <Store size={16} />
+                  Soy un Aliado Comercial
+                </button>
+              )}
+              {mode !== 'staff' && (mode !== 'aliado' && mode !== 'aliado_register') && (
+                <button
+                  onClick={() => setMode('staff')}
+                  className="w-full py-3 border border-slate-200 rounded-2xl text-slate-400 text-sm hover:text-indigo-600 hover:border-indigo-100 flex items-center justify-center gap-2 transition-all"
+                >
+                  <ShieldCheck size={16} />
+                  Acceso Personal Autorizado
+                </button>
+              )}
+              {(mode === 'aliado' || mode === 'aliado_register' || mode === 'staff') && (
+                <button
+                  onClick={() => setMode('login')}
+                  className="text-xs text-slate-400 hover:text-indigo-600 transition-colors"
+                >
+                   Volver al Inicio
+                </button>
+              )}
             </div>
           </div>
         </div>
